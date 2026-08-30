@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-31T00:00:00Z",
+  "title": "Design System: Hyperliquid Positions",
+  "extensions": {
+    "colorMeta": {
+      "graphite-canvas": {
+        "role": "neutral",
+        "displayName": "Graphite Canvas",
+        "canonical": "#060a0a",
+        "tonalRamp": ["#020303", "#060a0a", "#0d1413", "#1a2422", "#35413e", "#687571", "#aeb9b5", "#eff4f2"]
+      },
+      "graphite-surface": {
+        "role": "neutral",
+        "displayName": "Graphite Surface",
+        "canonical": "#0b100f",
+        "tonalRamp": ["#030504", "#0b100f", "#141c1a", "#222d2a", "#3c4945", "#71807b", "#b8c2be", "#f1f5f3"]
+      },
+      "graphite-raised": {
+        "role": "neutral",
+        "displayName": "Graphite Raised",
+        "canonical": "#121716",
+        "tonalRamp": ["#050707", "#121716", "#1b2421", "#2a3532", "#46534f", "#7c8984", "#bec7c3", "#f3f6f5"]
+      },
+      "graphite-pressed": {
+        "role": "neutral",
+        "displayName": "Graphite Pressed",
+        "canonical": "#1b1f1e",
+        "tonalRamp": ["#090a0a", "#1b1f1e", "#252b29", "#353d3a", "#515d58", "#87938e", "#c7cfcc", "#f5f7f6"]
+      },
+      "instrument-rule": {
+        "role": "neutral",
+        "displayName": "Instrument Rule",
+        "canonical": "rgba(255, 255, 255, 0.13)",
+        "tonalRamp": ["#111514", "#252a28", "#3d4441", "#59625e", "#7a8580", "#a0aaa6", "#cbd2cf", "#f2f5f4"]
+      },
+      "instrument-rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Instrument Rule",
+        "canonical": "rgba(255, 255, 255, 0.25)",
+        "tonalRamp": ["#161a19", "#2d3331", "#474e4b", "#636c68", "#838d89", "#a8b1ad", "#cfd5d2", "#f3f6f5"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Primary Instrument Text",
+        "canonical": "#f4f9f6",
+        "tonalRamp": ["#18201c", "#344039", "#526158", "#71837a", "#91a59a", "#b2c7bc", "#d6e9df", "#f4f9f6"]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Instrument Text",
+        "canonical": "#a8b8b3",
+        "tonalRamp": ["#15201d", "#2d413b", "#486159", "#648178", "#82a097", "#a8b8b3", "#d1dcda", "#f0f5f3"]
+      },
+      "live-mint": {
+        "role": "primary",
+        "displayName": "Live Mint",
+        "canonical": "#1fe09e",
+        "tonalRamp": ["#03251a", "#074d36", "#0b7652", "#0f9f70", "#17c789", "#1fe09e", "#8af1cc", "#e9fff7"]
+      },
+      "live-mint-muted": {
+        "role": "primary",
+        "displayName": "Deep Mint",
+        "canonical": "#0d4d38",
+        "tonalRamp": ["#031710", "#082f22", "#0d4d38", "#166c50", "#2a8b6a", "#62ad91", "#a4d3c1", "#e7f7f1"]
+      },
+      "risk-red": {
+        "role": "secondary",
+        "displayName": "Risk Red",
+        "canonical": "#ff474f",
+        "tonalRamp": ["#35090c", "#621017", "#8f1820", "#bc202a", "#e52e38", "#ff474f", "#ff9aa0", "#fff0f1"]
+      },
+      "risk-red-muted": {
+        "role": "secondary",
+        "displayName": "Deep Risk Red",
+        "canonical": "#571417",
+        "tonalRamp": ["#1d0507", "#380b0e", "#571417", "#772127", "#98363b", "#bc6367", "#dda3a6", "#f9e9ea"]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Warning Amber",
+        "canonical": "#ffad33",
+        "tonalRamp": ["#351f00", "#684000", "#9a6206", "#c98414", "#eba323", "#ffad33", "#ffd08a", "#fff5df"]
+      }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Onboarding title and the largest position outcome." },
+      "title": { "displayName": "Instrument Title", "purpose": "Product and asset names." },
+      "body": { "displayName": "Body", "purpose": "Explanatory copy, actions, and metrics." },
+      "label": { "displayName": "Instrument Label", "purpose": "Metric names, state badges, and compact status copy." }
+    },
+    "shadows": [
+      {
+        "name": "floating-panel",
+        "value": "-2px 10px 44px rgba(0,0,0,0.44)",
+        "purpose": "One broad offset shadow separates the floating utility body from the desktop."
+      }
+    ],
+    "motion": [
+      {
+        "name": "panel-state",
+        "value": "280–380ms snappy ease-out",
+        "purpose": "Notch, rail, inspector, and expanded-state transitions."
+      },
+      {
+        "name": "micro-feedback",
+        "value": "180ms ease-out",
+        "purpose": "Button, outline, and card hover feedback."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "120ms opacity or immediate frame change",
+        "purpose": "System Reduce Motion replacement for movement and scale."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "short-display",
+        "value": "730px height",
+        "purpose": "Expanded and rail heights contract to the visible screen and switch their position stacks to scrolling."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Mint onboarding action with a quiet pressed state and keyboard focus.",
+      "html": "<button class=\"ds-button-primary\">Track wallet</button>",
+      "css": ".ds-button-primary{height:45px;padding:0 16px;border:0;border-radius:12px;background:#1fe09e;color:#060a0a;font:700 14px -apple-system,BlinkMacSystemFont,sans-serif;transition:filter .18s ease-out}.ds-button-primary:hover{filter:brightness(1.06)}.ds-button-primary:active{filter:brightness(.92)}.ds-button-primary:focus-visible{outline:2px solid #f4f9f6;outline-offset:2px}"
+    },
+    {
+      "name": "Long Direction Badge",
+      "kind": "chip",
+      "refersTo": "side-badge-long",
+      "description": "Compact direction and leverage treatment for long positions.",
+      "html": "<span class=\"ds-badge-long\">LONG 5×</span>",
+      "css": ".ds-badge-long{display:inline-flex;padding:4px 8px;border-radius:999px;background:#0d4d38;color:#1fe09e;font:700 11px -apple-system,BlinkMacSystemFont,sans-serif}"
+    },
+    {
+      "name": "Position Card",
+      "kind": "card",
+      "refersTo": "position-card",
+      "description": "Ruled graphite container for one expanded position.",
+      "html": "<article class=\"ds-position-card\"><strong>BTC-PERP</strong><span>+$184.32</span></article>",
+      "css": ".ds-position-card{display:flex;justify-content:space-between;align-items:center;padding:13px;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:#0b100f;color:#f4f9f6;font:600 14px -apple-system,BlinkMacSystemFont,sans-serif}.ds-position-card span{color:#1fe09e;font-variant-numeric:tabular-nums}.ds-position-card:hover{border-color:rgba(31,224,158,.42)}.ds-position-card:focus-within{outline:2px solid #1fe09e;outline-offset:2px}"
+    },
+    {
+      "name": "Wallet Field",
+      "kind": "input",
+      "description": "Native-height field for one public Ethereum address.",
+      "html": "<input class=\"ds-wallet-field\" aria-label=\"Public wallet address\" placeholder=\"0x…\">",
+      "css": ".ds-wallet-field{box-sizing:border-box;width:320px;height:46px;padding:0 13px;border:1px solid transparent;border-radius:12px;background:#121716;color:#f4f9f6;font:500 14px ui-monospace,SFMono-Regular,monospace}.ds-wallet-field::placeholder{color:#a8b8b3}.ds-wallet-field:hover{background:#1b1f1e}.ds-wallet-field:focus-visible{outline:0;border:1.5px solid #1fe09e}"
+    },
+    {
+      "name": "Liquidation Distance",
+      "kind": "custom",
+      "description": "Independent risk meter with a numeric label; amber here denotes intermediate proximity.",
+      "html": "<div class=\"ds-liquidation\"><span>Liquidation distance</span><strong>16.0%</strong><i aria-hidden=\"true\"></i></div>",
+      "css": ".ds-liquidation{display:grid;grid-template-columns:1fr auto;gap:7px;color:#a8b8b3;font:600 12px -apple-system,BlinkMacSystemFont,sans-serif}.ds-liquidation strong{color:#ffad33;font-variant-numeric:tabular-nums}.ds-liquidation i{grid-column:1/-1;height:7px;border-radius:999px;background:linear-gradient(90deg,#ffad33 0 44%,rgba(255,255,255,.07) 44% 100%)}"
+    },
+    {
+      "name": "Connection State",
+      "kind": "custom",
+      "description": "Text-and-dot freshness treatment that never relies on color alone.",
+      "html": "<span class=\"ds-connection\"><i aria-hidden=\"true\"></i>Reconnecting</span>",
+      "css": ".ds-connection{display:inline-flex;align-items:center;gap:6px;color:#a8b8b3;font:600 10px -apple-system,BlinkMacSystemFont,sans-serif}.ds-connection i{width:8px;height:8px;border-radius:50%;background:#ff474f;box-shadow:0 0 0 4px rgba(255,71,79,.2)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Edge Instrument",
+    "overview": "Hyperliquid Positions behaves like a small instrument mounted at the edge of a trader's workspace. It is precise and continuously available, but it refuses to compete with the work already on screen. Its identity comes from progressive disclosure. The system is native, dense, and restrained; expression belongs in silhouette and state transitions rather than decorative chrome.",
+    "keyCharacteristics": [
+      "Four-state disclosure: notch, rail, inspector, expanded board.",
+      "Graphite instrument surfaces with one mint live voice.",
+      "Tabular financial figures that do not shift as prices update.",
+      "Authored asset marks and explicit freshness/demo truth.",
+      "Native controls, keyboard paths, and Reduce Motion behavior."
+    ],
+    "rules": [
+      { "name": "The Semantic Separation Rule", "body": "PnL color and liquidation-risk color are calculated independently; profitability never implies safety.", "section": "colors" },
+      { "name": "The Stable Figure Rule", "body": "Every changing financial value uses monospaced or tabular digits and numeric content transitions.", "section": "typography" },
+      { "name": "The One Edge Rule", "body": "Window size may change, but its chosen screen edge and vertical context do not.", "section": "layout" },
+      { "name": "The One Floating Body Rule", "body": "Elevation belongs to the utility against the desktop; content inside it is separated by tone and fine rules.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do preserve the notch → rail → inspector → expanded disclosure sequence.",
+      "Do keep financial values aligned with tabular digits and update only the affected position.",
+      "Do pair market colors with signs, labels, direction text, or numeric distance.",
+      "Do label stale and synthetic states in words.",
+      "Do replace move and scale transitions with opacity or immediate changes when Reduce Motion is enabled.",
+      "Do use authored vector geometry for recognizable asset marks."
+    ],
+    "donts": [
+      "Don't turn the utility into a general dashboard, chart surface, or trading terminal.",
+      "Don't add decorative animation, glow, or shadow to every internal component.",
+      "Don't use positive PnL color as a proxy for liquidation safety.",
+      "Don't let a state resize detach the utility from its selected screen edge.",
+      "Don't expose deferred features such as privacy mode or trading controls in the v0 interface.",
+      "Don't replace native control semantics with gesture-only interaction."
+    ]
+  }
+}
