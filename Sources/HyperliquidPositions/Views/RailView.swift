@@ -11,55 +11,47 @@ struct RailView: View {
             dragHandle
                 .frame(height: HPLayout.railTopPadding)
 
-            if model.positions.isEmpty {
-                emptyState
-            } else {
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 0) {
-                        ForEach(model.positions) { position in
-                            Button {
-                                model.hover(positionID: position.id)
-                            } label: {
-                                RailPositionView(position: position)
-                                    .frame(height: HPLayout.positionRowHeight)
-                            }
-                            .buttonStyle(.plain)
-                            .onHover { hovering in
-                                if hovering {
-                                    model.hover(positionID: position.id)
-                                }
-                            }
-                            .accessibilityHint("Shows the position inspector")
-                        }
-                    }
+            ZStack {
+                if model.activeSection == .positions {
+                    positionsContent
+                        .transition(.opacity)
+                } else {
+                    marketContent
+                        .transition(.opacity)
                 }
             }
+            .frame(maxHeight: .infinity)
 
             Divider()
                 .overlay(HPTheme.line)
                 .padding(.horizontal, 19)
 
-            Button {
-                model.expand()
-            } label: {
-                VStack(spacing: 4) {
-                    Image(systemName: "rectangle.leftthird.inset.filled")
-                        .font(.system(size: 17, weight: .medium))
-                    if model.connectionState == .connecting || model.connectionState == .stale {
-                        HStack(spacing: 4) {
-                            StatusDot(state: model.connectionState, size: 6)
-                            Text(model.connectionState.label)
-                                .font(.system(size: 8, weight: .semibold))
-                        }
-                    }
+            HStack(spacing: 0) {
+                railFooterButton(
+                    icon: "briefcase",
+                    label: "Positions",
+                    isActive: model.activeSection == .positions
+                ) {
+                    model.switchSection(to: .positions)
                 }
-                .foregroundStyle(HPTheme.textSecondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
+
+                railFooterButton(
+                    icon: "chart.line.uptrend.xyaxis",
+                    label: "Markets",
+                    isActive: model.activeSection == .market
+                ) {
+                    model.switchSection(to: .market)
+                }
+
+                railFooterButton(
+                    icon: "rectangle.leftthird.inset.filled",
+                    label: "Expand",
+                    isActive: false
+                ) {
+                    model.expand()
+                }
             }
-            .buttonStyle(.plain)
             .frame(height: HPLayout.railFooterHeight)
-            .accessibilityLabel("Expand all positions")
         }
         .background {
             UnevenRoundedRectangle(
@@ -80,9 +72,73 @@ struct RailView: View {
                 )
                 .strokeBorder(HPTheme.line, lineWidth: 0.8)
             }
-            .shadow(color: HPTheme.panelShadow, radius: 20, x: -3, y: 10)
         }
         .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var positionsContent: some View {
+        if model.positions.isEmpty {
+            emptyState
+        } else {
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    ForEach(model.positions) { position in
+                        Button {
+                            model.hover(positionID: position.id)
+                        } label: {
+                            RailPositionView(position: position)
+                                .frame(height: HPLayout.positionRowHeight)
+                        }
+                        .buttonStyle(.plain)
+                        .onHover { hovering in
+                            if hovering { model.hover(positionID: position.id) }
+                        }
+                        .accessibilityHint("Shows the position inspector")
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var marketContent: some View {
+        if model.marketQuotes.isEmpty {
+            VStack(spacing: 8) {
+                ProgressView().controlSize(.small).tint(HPTheme.positive)
+                Text("Loading\nmarkets")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(HPTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            MarketRailList()
+        }
+    }
+
+    private func railFooterButton(
+        icon: String,
+        label: String,
+        isActive: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(isActive ? HPTheme.positive : HPTheme.textSecondary)
+
+                if isActive {
+                    StatusDot(state: model.activeConnectionState, size: 5)
+                        .offset(x: 5, y: -4)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     private var dragHandle: some View {

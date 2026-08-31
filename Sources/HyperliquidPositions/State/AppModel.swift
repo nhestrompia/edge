@@ -26,15 +26,28 @@ enum ConnectionState: Equatable {
     }
 }
 
+enum SidebarSection: String, CaseIterable, Identifiable {
+    case positions
+    case market
+
+    var id: Self { self }
+    var label: String { rawValue.capitalized }
+}
+
 @MainActor
 final class AppModel: ObservableObject {
     static let shared = AppModel()
 
     @Published private(set) var positions: [Position] = []
+    @Published private(set) var marketQuotes: [MarketQuote] = []
     @Published var panelMode: PanelMode
+    @Published var activeSection: SidebarSection = .positions
     @Published var hoveredPositionID: Position.ID?
+    @Published var hoveredMarketSymbol: String?
     @Published private(set) var connectionState: ConnectionState = .idle
-    @Published private(set) var lastUpdated: Date?
+    @Published private(set) var marketConnectionState: ConnectionState = .idle
+    private(set) var lastUpdated: Date?
+    private(set) var marketLastUpdated: Date?
     @Published private(set) var onboardingError: String?
     @Published private(set) var isSubmittingWallet = false
 
@@ -42,14 +55,34 @@ final class AppModel: ObservableObject {
 
     private let api = HyperliquidAPI()
     private let socket = HyperliquidWebSocket()
+    private let binanceAPI = BinanceAPI()
+    private let binanceSocket = BinanceWebSocket()
     private var reconciliationTask: Task<Void, Never>?
     private var streamTask: Task<Void, Never>?
+    private var marketRefreshTask: Task<Void, Never>?
+    private var marketStreamTask: Task<Void, Never>?
     private var collapseTask: Task<Void, Never>?
     private var preferencesCancellable: AnyCancellable?
     private let isDemoMode: Bool
+    private let isCaptureMode: Bool
 
     var hoveredPosition: Position? {
         positions.first { $0.id == hoveredPositionID }
+    }
+
+    var hoveredMarketQuote: MarketQuote? {
+        marketQuotes.first { $0.symbol == hoveredMarketSymbol }
+    }
+
+    var hasActiveInspector: Bool {
+        switch activeSection {
+        case .positions: hoveredPosition != nil
+        case .market: hoveredMarketQuote != nil
+        }
+    }
+
+    var activeConnectionState: ConnectionState {
+        activeSection == .positions ? connectionState : marketConnectionState
     }
 
     var totalUnrealizedPnl: Double {
@@ -71,8 +104,17 @@ final class AppModel: ObservableObject {
 
     var isShowingDemoData: Bool { isDemoMode }
 
+    func prepareLayoutStressData() {
+        guard ProcessInfo.processInfo.environment["EDGE_LAYOUT_STRESS"] == "1" else { return }
+        positions = Position.layoutStressDemo
+        activeSection = .positions
+        hoveredPositionID = nil
+        panelMode = .notch
+    }
+
     private init() {
         isDemoMode = ProcessInfo.processInfo.environment["HYPERLIQUID_DEMO"] == "1"
+        isCaptureMode = ProcessInfo.processInfo.environment["HYPERLIQUID_CAPTURE_DIR"] != nil
         if isDemoMode {
             preferences = AppPreferences(defaults: UserDefaults(suiteName: UUID().uuidString)!)
         } else {
@@ -80,9 +122,12 @@ final class AppModel: ObservableObject {
         }
         if isDemoMode {
             positions = Position.demo
+            marketQuotes = MarketQuote.demo
             panelMode = .rail
             connectionState = .live
+            marketConnectionState = .live
             lastUpdated = .now
+            marketLastUpdated = .now
         } else {
             panelMode = preferences.walletAddress.isEmpty ? .onboarding : .notch
         }
@@ -116,7 +161,7 @@ final class AppModel: ObservableObject {
             positions = fetchedPositions
             lastUpdated = .now
             connectionState = .live
-            animate(.snappy(duration: 0.36)) {
+            animate(.smooth(duration: 0.5, extraBounce: 0)) {
                 panelMode = preferences.autoHide ? .notch : .rail
             }
             beginMonitoring()
@@ -130,7 +175,10 @@ final class AppModel: ObservableObject {
         stopMonitoring()
         preferences.walletAddress = ""
         positions = []
+        marketQuotes = []
         hoveredPositionID = nil
+        hoveredMarketSymbol = nil
+        activeSection = .positions
         onboardingError = nil
         panelMode = .onboarding
     }
@@ -138,27 +186,52 @@ final class AppModel: ObservableObject {
     func pointerEntered() {
         collapseTask?.cancel()
         if panelMode == .notch {
-            animate(.snappy(duration: 0.32, extraBounce: 0.08)) {
+            animate(.smooth(duration: 0.5, extraBounce: 0)) {
                 panelMode = .rail
             }
         }
     }
 
     func pointerExited() {
-        guard preferences.autoHide, panelMode != .onboarding else { return }
+        guard panelMode != .onboarding else { return }
         collapseTask?.cancel()
         collapseTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(650))
+            try? await Task.sleep(for: .milliseconds(820))
             guard !Task.isCancelled, let self else { return }
-            self.collapseToNotch()
+            if self.preferences.autoHide {
+                self.collapseToNotch()
+            } else {
+                self.animate(.smooth(duration: 0.46, extraBounce: 0)) {
+                    self.hoveredPositionID = nil
+                    self.hoveredMarketSymbol = nil
+                }
+            }
         }
     }
 
     func hover(positionID: Position.ID?) {
         collapseTask?.cancel()
         guard hoveredPositionID != positionID else { return }
-        animate(.snappy(duration: 0.28, extraBounce: 0.04)) {
+        animate(.smooth(duration: 0.46, extraBounce: 0)) {
             hoveredPositionID = positionID
+        }
+    }
+
+    func hover(marketSymbol: String?) {
+        collapseTask?.cancel()
+        guard hoveredMarketSymbol != marketSymbol else { return }
+        animate(.smooth(duration: 0.46, extraBounce: 0)) {
+            hoveredMarketSymbol = marketSymbol
+        }
+    }
+
+    func switchSection(to section: SidebarSection) {
+        guard activeSection != section else { return }
+        collapseTask?.cancel()
+        animate(.smooth(duration: 0.48, extraBounce: 0)) {
+            hoveredPositionID = nil
+            hoveredMarketSymbol = nil
+            activeSection = section
         }
     }
 
@@ -170,31 +243,48 @@ final class AppModel: ObservableObject {
         hover(positionID: positions[nextIndex].id)
     }
 
+    func selectAdjacentMarket(offset: Int) {
+        guard !marketQuotes.isEmpty else { return }
+        let currentIndex = hoveredMarketSymbol.flatMap { symbol in
+            marketQuotes.firstIndex { $0.symbol == symbol }
+        } ?? (offset > 0 ? -1 : 0)
+        let nextIndex = (currentIndex + offset + marketQuotes.count) % marketQuotes.count
+        hover(marketSymbol: marketQuotes[nextIndex].symbol)
+    }
+
     func expand() {
         collapseTask?.cancel()
-        animate(.snappy(duration: 0.38, extraBounce: 0.04)) {
+        animate(.smooth(duration: 0.5, extraBounce: 0)) {
             hoveredPositionID = nil
+            hoveredMarketSymbol = nil
             panelMode = .expanded
         }
     }
 
     func showRail() {
         collapseTask?.cancel()
-        animate(.snappy(duration: 0.3)) {
+        animate(.smooth(duration: 0.48, extraBounce: 0)) {
             hoveredPositionID = nil
+            hoveredMarketSymbol = nil
             panelMode = .rail
         }
     }
 
     func hidePositions() {
-        animate(.snappy(duration: 0.3)) {
+        guard panelMode != .onboarding else { return }
+        animate(.smooth(duration: 0.48, extraBounce: 0)) {
             hoveredPositionID = nil
+            hoveredMarketSymbol = nil
             panelMode = .notch
         }
     }
 
     func showPositions() {
-        animate(.snappy(duration: 0.3)) {
+        guard WalletAddressValidator.isValid(trackedAddress) else {
+            panelMode = .onboarding
+            return
+        }
+        animate(.smooth(duration: 0.48, extraBounce: 0)) {
             panelMode = .rail
         }
     }
@@ -206,14 +296,16 @@ final class AppModel: ObservableObject {
     }
 
     private func collapseToNotch() {
-        animate(.snappy(duration: 0.34, extraBounce: 0.04)) {
+        animate(.smooth(duration: 0.5, extraBounce: 0)) {
             hoveredPositionID = nil
+            hoveredMarketSymbol = nil
             panelMode = .notch
         }
     }
 
     private func animate(_ animation: Animation, changes: () -> Void) {
-        withAnimation(NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? nil : animation, changes)
+        let shouldReduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || isCaptureMode
+        withAnimation(shouldReduceMotion ? nil : animation, changes)
     }
 
     private func beginMonitoring() {
@@ -235,7 +327,9 @@ final class AppModel: ObservableObject {
                 do {
                     self.connectionState = .connecting
                     let events = try await self.socket.events(for: address)
-                    self.connectionState = .live
+                    if self.connectionState != .live {
+                        self.connectionState = .live
+                    }
                     retryDelay = 1
 
                     for try await event in events {
@@ -251,26 +345,91 @@ final class AppModel: ObservableObject {
                 }
             }
         }
+
+        marketRefreshTask = Task { [weak self] in
+            guard let self else { return }
+            await self.refreshMarkets()
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                guard !Task.isCancelled else { return }
+                await self.refreshMarkets()
+            }
+        }
+
+        marketStreamTask = Task { [weak self] in
+            var retryDelay = 1.0
+            while !Task.isCancelled {
+                guard let self else { return }
+                do {
+                    self.marketConnectionState = .connecting
+                    let quotes = await self.binanceSocket.quotes()
+                    retryDelay = 1
+
+                    for try await quote in quotes {
+                        guard !Task.isCancelled else { return }
+                        self.consume(quote)
+                    }
+                    throw BinanceWebSocket.StreamError.malformedMessage
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    self.marketConnectionState = self.marketQuotes.isEmpty ? .connecting : .stale
+                    try? await Task.sleep(for: .seconds(retryDelay))
+                    retryDelay = min(retryDelay * 2, 30)
+                }
+            }
+        }
     }
 
     private func stopMonitoring() {
         reconciliationTask?.cancel()
         streamTask?.cancel()
+        marketRefreshTask?.cancel()
+        marketStreamTask?.cancel()
         reconciliationTask = nil
         streamTask = nil
+        marketRefreshTask = nil
+        marketStreamTask = nil
         Task { await socket.disconnect() }
+        Task { await binanceSocket.disconnect() }
     }
 
     private func refresh(address: String) async {
         do {
             positions = try await api.fetchPositions(for: address)
-            connectionState = .live
+            if connectionState != .live {
+                connectionState = .live
+            }
             lastUpdated = .now
         } catch {
             if !positions.isEmpty {
                 connectionState = .stale
             }
         }
+    }
+
+    private func refreshMarkets() async {
+        do {
+            marketQuotes = try await binanceAPI.fetchQuotes()
+            marketLastUpdated = .now
+            if marketConnectionState == .idle {
+                marketConnectionState = .connecting
+            }
+        } catch {
+            marketConnectionState = marketQuotes.isEmpty ? .connecting : .stale
+        }
+    }
+
+    private func consume(_ quote: MarketQuote) {
+        if let index = marketQuotes.firstIndex(where: { $0.symbol == quote.symbol }) {
+            marketQuotes[index] = quote
+        } else {
+            marketQuotes.append(quote)
+            marketQuotes.sort(by: BinanceAPI.sortQuotes)
+        }
+        if marketConnectionState != .live {
+            marketConnectionState = .live
+        }
+        marketLastUpdated = quote.updatedAt
     }
 
     private func consume(_ event: HyperliquidWebSocket.Event) {
@@ -285,7 +444,9 @@ final class AppModel: ObservableObject {
                 positions = normalized
             }
         }
-        connectionState = .live
+        if connectionState != .live {
+            connectionState = .live
+        }
         lastUpdated = .now
     }
 

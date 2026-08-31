@@ -19,7 +19,7 @@ struct AppSettingsView: View {
                 }
                 .pickerStyle(.radioGroup)
 
-                Picker("Position side", selection: $model.preferences.sidebarEdge) {
+                Picker("Screen side", selection: $model.preferences.sidebarEdge) {
                     ForEach(SidebarEdge.allCases) { edge in
                         Text(edge.title).tag(edge)
                     }
@@ -50,6 +50,6 @@ struct AppSettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 440, height: 500)
-        .navigationTitle("Hyperliquid Positions")
+        .navigationTitle("edge")
     }
 }

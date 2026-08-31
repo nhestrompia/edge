@@ -24,7 +24,7 @@ enum HPLayout {
     static let inspectorWidth: CGFloat = 386
     static let inspectorHeight: CGFloat = 302
     static let expandedWidth: CGFloat = 438
-    static let onboardingSize = CGSize(width: 462, height: 426)
+    static let onboardingSize = CGSize(width: 486, height: 626)
     static let positionRowHeight: CGFloat = 106
     static let railTopPadding: CGFloat = 18
     static let railFooterHeight: CGFloat = 62
@@ -76,6 +76,22 @@ enum HPFormat {
 
     static func price(_ value: Double?) -> String {
         guard let value else { return "—" }
+        let digits = value < 10 ? 4 : value < 1_000 ? 2 : 0
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.currencyCode = "USD"
+        formatter.currencySymbol = "$"
+        formatter.usesGroupingSeparator = true
+        formatter.minimumFractionDigits = digits
+        formatter.maximumFractionDigits = digits
+        return formatter.string(from: NSNumber(value: value)) ?? "$0"
+    }
+
+    static func marketPrice(_ value: Double, compact: Bool = false) -> String {
+        if compact, value >= 10_000 {
+            return "$\(String(format: "%.1fK", value / 1_000))"
+        }
         let digits = value < 10 ? 4 : value < 1_000 ? 2 : 0
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency

@@ -13,6 +13,8 @@ final class EdgePanelCoordinator: NSObject {
     private let panel: UtilityPanel
     private var cancellables = Set<AnyCancellable>()
     private var dragOriginY: CGFloat?
+    private var pendingFrameUpdate: Task<Void, Never>?
+    private var lastRequestedFrame: CGRect?
 
     init(model: AppModel) {
         self.model = model
@@ -37,6 +39,12 @@ final class EdgePanelCoordinator: NSObject {
             panel.makeKey()
         }
 
+        if ProcessInfo.processInfo.environment["EDGE_LAYOUT_STRESS"] == "1" {
+            model.prepareLayoutStressData()
+            runLayoutStressSequence()
+            return
+        }
+
         if let captureDirectory = ProcessInfo.processInfo.environment["HYPERLIQUID_CAPTURE_DIR"] {
             runDemoCaptureSequence(in: URL(fileURLWithPath: captureDirectory, isDirectory: true))
         }
@@ -53,7 +61,7 @@ final class EdgePanelCoordinator: NSObject {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         panel.level = model.preferences.alwaysOnTop ? .floating : .normal
         panel.animationBehavior = .none
-        panel.title = "Hyperliquid Positions"
+        panel.title = "edge"
         panel.acceptsMouseMovedEvents = true
         panel.contentView?.wantsLayer = true
     }
@@ -69,20 +77,49 @@ final class EdgePanelCoordinator: NSObject {
         )
         .environmentObject(model)
 
-        let hostingView = NSHostingView(rootView: root)
+        panel.contentView = Self.makeContentView(rootView: root)
+    }
+
+    static func makeContentView<Content: View>(rootView: Content) -> NSView {
+        let hostingView = NSHostingView(rootView: rootView)
+        hostingView.sizingOptions = []
+        hostingView.safeAreaRegions = []
+        hostingView.sceneBridgingOptions = []
+        hostingView.autoresizingMask = [.width, .height]
+        hostingView.frame = .zero
+        hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
-        panel.contentView = hostingView
+
+        // Keep SwiftUI out of NSWindow sizing. A direct NSHostingView contentView can
+        // feed its animated content size back into AppKit while the panel is resizing.
+        let containerView = NSView(frame: .zero)
+        containerView.wantsLayer = true
+        containerView.layer?.backgroundColor = NSColor.clear.cgColor
+        containerView.addSubview(hostingView)
+        return containerView
     }
 
     private func observeModel() {
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest4(
             model.$panelMode,
             model.$hoveredPositionID,
-            model.$positions
+            model.$hoveredMarketSymbol,
+            model.$activeSection
         )
         .receive(on: RunLoop.main)
-        .sink { [weak self] _, _, _ in
-            self?.updateFrame(animated: true)
+        .sink { [weak self] _, _, _, _ in
+            self?.scheduleFrameUpdate(animated: true)
+        }
+        .store(in: &cancellables)
+
+        Publishers.Merge(
+            model.$positions.map(\.count),
+            model.$marketQuotes.map(\.count)
+        )
+        .removeDuplicates()
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+            self?.scheduleFrameUpdate(animated: true)
         }
         .store(in: &cancellables)
 
@@ -96,9 +133,18 @@ final class EdgePanelCoordinator: NSObject {
         model.preferences.$sidebarEdge
             .removeDuplicates()
             .sink { [weak self] _ in
-                self?.updateFrame(animated: true)
+                self?.scheduleFrameUpdate(animated: true)
             }
             .store(in: &cancellables)
+    }
+
+    private func scheduleFrameUpdate(animated: Bool) {
+        pendingFrameUpdate?.cancel()
+        pendingFrameUpdate = Task { [weak self] in
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            self?.updateFrame(animated: animated)
+        }
     }
 
     private func updateFrame(animated: Bool) {
@@ -135,12 +181,14 @@ final class EdgePanelCoordinator: NSObject {
         }
 
         let targetFrame = CGRect(origin: CGPoint(x: x, y: y), size: size)
-        guard panel.frame != targetFrame else { return }
+        guard lastRequestedFrame != targetFrame else { return }
+        lastRequestedFrame = targetFrame
 
-        if animated, panel.isVisible, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+        let isCapturing = ProcessInfo.processInfo.environment["HYPERLIQUID_CAPTURE_DIR"] != nil
+        if animated, panel.isVisible, !isCapturing, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.28
-                context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.82, 0.2, 1)
+                context.duration = 0.48
+                context.timingFunction = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
                 panel.animator().setFrame(targetFrame, display: true)
             }
         } else {
@@ -161,9 +209,9 @@ final class EdgePanelCoordinator: NSObject {
             HPLayout.notchSize
         case .rail:
             CGSize(
-                width: model.hoveredPositionID == nil
-                    ? HPLayout.railWidth
-                    : HPLayout.railWidth + HPLayout.inspectorWidth,
+                width: model.hasActiveInspector
+                    ? HPLayout.railWidth + HPLayout.inspectorWidth
+                    : HPLayout.railWidth,
                 height: railHeight(in: visibleFrame)
             )
         case .expanded:
@@ -175,8 +223,9 @@ final class EdgePanelCoordinator: NSObject {
     }
 
     private func railHeight(in visibleFrame: CGRect) -> CGFloat {
+        let itemCount = model.activeSection == .positions ? model.positions.count : model.marketQuotes.count
         let contentHeight = HPLayout.railTopPadding
-            + CGFloat(max(model.positions.count, 1)) * HPLayout.positionRowHeight
+            + CGFloat(max(itemCount, 1)) * HPLayout.positionRowHeight
             + HPLayout.railFooterHeight
         return min(max(contentHeight, 242), min(630, visibleFrame.height - 20))
     }
@@ -195,6 +244,7 @@ final class EdgePanelCoordinator: NSObject {
             visibleFrame.maxY - panel.frame.height - 8
         )
         panel.setFrameOrigin(CGPoint(x: panel.frame.minX, y: clampedY))
+        lastRequestedFrame = panel.frame
     }
 
     private func dragEnded() {
@@ -213,24 +263,83 @@ final class EdgePanelCoordinator: NSObject {
             guard let self else { return }
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
+            model.panelMode = .onboarding
+            try? await Task.sleep(for: .milliseconds(650))
+            capturePanel(to: directory.appending(path: "00-onboarding.png"))
+
+            model.switchSection(to: .positions)
             model.showRail()
             model.hover(positionID: nil)
-            try? await Task.sleep(for: .milliseconds(450))
+            try? await Task.sleep(for: .milliseconds(650))
             capturePanel(to: directory.appending(path: "01-rail.png"))
 
             if let firstPosition = model.positions.first {
                 model.hover(positionID: firstPosition.id)
-                try? await Task.sleep(for: .milliseconds(450))
+                try? await Task.sleep(for: .milliseconds(650))
                 capturePanel(to: directory.appending(path: "02-inspector.png"))
             }
 
             model.expand()
-            try? await Task.sleep(for: .milliseconds(500))
+            try? await Task.sleep(for: .milliseconds(650))
             capturePanel(to: directory.appending(path: "03-expanded.png"))
 
+            model.switchSection(to: .market)
+            try? await Task.sleep(for: .milliseconds(600))
+            capturePanel(to: directory.appending(path: "04-market-expanded.png"))
+
+            model.showRail()
+            try? await Task.sleep(for: .milliseconds(600))
+            capturePanel(to: directory.appending(path: "05-market-rail.png"))
+
+            if let firstMarket = model.marketQuotes.first {
+                model.hover(marketSymbol: firstMarket.symbol)
+                try? await Task.sleep(for: .milliseconds(650))
+                capturePanel(to: directory.appending(path: "06-market-inspector.png"))
+
+                model.preferences.sidebarEdge = .left
+                try? await Task.sleep(for: .milliseconds(650))
+                capturePanel(to: directory.appending(path: "07-left-edge-inspector.png"))
+                model.preferences.sidebarEdge = .right
+            }
+
             model.hidePositions()
-            try? await Task.sleep(for: .milliseconds(450))
-            capturePanel(to: directory.appending(path: "04-notch.png"))
+            try? await Task.sleep(for: .milliseconds(650))
+            capturePanel(to: directory.appending(path: "08-notch.png"))
+            NSApp.terminate(nil)
+        }
+    }
+
+    private func runLayoutStressSequence() {
+        panel.ignoresMouseEvents = true
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            for index in 0..<24 {
+                model.switchSection(to: index.isMultiple(of: 2) ? .positions : .market)
+                model.showRail()
+                try? await Task.sleep(for: .milliseconds(140))
+
+                if model.activeSection == .positions {
+                    model.hover(positionID: model.positions[index % model.positions.count].id)
+                } else {
+                    model.hover(marketSymbol: model.marketQuotes[index % model.marketQuotes.count].symbol)
+                }
+                try? await Task.sleep(for: .milliseconds(140))
+
+                if model.activeSection == .positions {
+                    model.hover(positionID: model.positions[(index + 1) % model.positions.count].id)
+                    try? await Task.sleep(for: .milliseconds(70))
+                }
+
+                model.expand()
+                try? await Task.sleep(for: .milliseconds(140))
+                model.showRail()
+                try? await Task.sleep(for: .milliseconds(140))
+                model.hidePositions()
+                try? await Task.sleep(for: .milliseconds(140))
+            }
+
+            print("[EDGE_LAYOUT_STRESS] PASS")
             NSApp.terminate(nil)
         }
     }

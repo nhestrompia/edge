@@ -4,6 +4,8 @@ struct HoverCardView: View {
     @EnvironmentObject private var model: AppModel
     let position: Position
 
+    private var pointsRight: Bool { model.preferences.sidebarEdge == .right }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
@@ -57,15 +59,15 @@ struct HoverCardView: View {
             .font(.system(size: 13).monospacedDigit())
             .padding(.top, 9)
         }
-        .padding(.leading, 22)
-        .padding(.trailing, 42)
+        .padding(.leading, pointsRight ? 22 : 42)
+        .padding(.trailing, pointsRight ? 42 : 22)
         .padding(.vertical, 21)
         .frame(width: HPLayout.inspectorWidth, height: HPLayout.inspectorHeight, alignment: .topLeading)
         .background {
-            InspectorBubbleShape()
+            InspectorBubbleShape(pointsRight: pointsRight)
                 .fill(HPTheme.canvas.opacity(0.985))
                 .overlay {
-                    InspectorBubbleShape()
+                    InspectorBubbleShape(pointsRight: pointsRight)
                         .stroke(HPTheme.lineStrong, lineWidth: 0.7)
                 }
                 .shadow(color: HPTheme.panelShadow, radius: 22, x: -3, y: 11)
@@ -74,19 +76,53 @@ struct HoverCardView: View {
     }
 }
 
-private struct InspectorBubbleShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let pointerWidth: CGFloat = 25
-        let bodyRect = CGRect(x: 0, y: 0, width: rect.width - pointerWidth, height: rect.height)
-        var path = Path(roundedRect: bodyRect, cornerRadius: 18)
+struct InspectorBubbleShape: Shape {
+    var pointsRight = true
 
+    func path(in rect: CGRect) -> Path {
+        let pointerWidth: CGFloat = 27
+        let radius: CGFloat = 18
+        let bodyMaxX = rect.maxX - pointerWidth
         let centerY = rect.midY
-        var pointer = Path()
-        pointer.move(to: CGPoint(x: bodyRect.maxX - 1, y: centerY - 22))
-        pointer.addLine(to: CGPoint(x: rect.maxX, y: centerY))
-        pointer.addLine(to: CGPoint(x: bodyRect.maxX - 1, y: centerY + 22))
-        pointer.closeSubpath()
-        path.addPath(pointer)
-        return path
+        let shoulder: CGFloat = 23
+        var path = Path()
+
+        path.move(to: CGPoint(x: radius, y: rect.minY))
+        path.addLine(to: CGPoint(x: bodyMaxX - radius, y: rect.minY))
+        path.addQuadCurve(
+            to: CGPoint(x: bodyMaxX, y: rect.minY + radius),
+            control: CGPoint(x: bodyMaxX, y: rect.minY)
+        )
+        path.addLine(to: CGPoint(x: bodyMaxX, y: centerY - shoulder))
+        path.addCurve(
+            to: CGPoint(x: rect.maxX, y: centerY),
+            control1: CGPoint(x: bodyMaxX + 8, y: centerY - shoulder + 3),
+            control2: CGPoint(x: rect.maxX - 7, y: centerY - 7)
+        )
+        path.addCurve(
+            to: CGPoint(x: bodyMaxX, y: centerY + shoulder),
+            control1: CGPoint(x: rect.maxX - 7, y: centerY + 7),
+            control2: CGPoint(x: bodyMaxX + 8, y: centerY + shoulder - 3)
+        )
+        path.addLine(to: CGPoint(x: bodyMaxX, y: rect.maxY - radius))
+        path.addQuadCurve(
+            to: CGPoint(x: bodyMaxX - radius, y: rect.maxY),
+            control: CGPoint(x: bodyMaxX, y: rect.maxY)
+        )
+        path.addLine(to: CGPoint(x: radius, y: rect.maxY))
+        path.addQuadCurve(
+            to: CGPoint(x: rect.minX, y: rect.maxY - radius),
+            control: CGPoint(x: rect.minX, y: rect.maxY)
+        )
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+        path.addQuadCurve(
+            to: CGPoint(x: radius, y: rect.minY),
+            control: CGPoint(x: rect.minX, y: rect.minY)
+        )
+        path.closeSubpath()
+        guard !pointsRight else { return path }
+        return path.applying(
+            CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: rect.width, ty: 0)
+        )
     }
 }

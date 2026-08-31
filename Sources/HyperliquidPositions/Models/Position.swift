@@ -96,4 +96,33 @@ extension Position {
             pnlPercent: -1.03
         )
     ]
+
+    static let layoutStressDemo: [Position] = demo + [
+        Position(
+            coin: "SOL",
+            side: .long,
+            leverage: 4,
+            size: 24.2,
+            entryPrice: 181.20,
+            liquidationPrice: 144.80,
+            marginUsed: 1_100,
+            markPrice: 186.42,
+            notionalValue: 4_511.36,
+            unrealizedPnl: 126.32,
+            pnlPercent: 11.48
+        ),
+        Position(
+            coin: "ATOM",
+            side: .long,
+            leverage: 20,
+            size: 1_434.65,
+            entryPrice: 1.4601,
+            liquidationPrice: nil,
+            marginUsed: 103.81,
+            markPrice: 1.4478,
+            notionalValue: 2_076.17,
+            unrealizedPnl: -17.77,
+            pnlPercent: -16.97
+        )
+    ]
 }

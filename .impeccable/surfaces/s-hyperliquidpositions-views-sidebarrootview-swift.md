@@ -2,34 +2,34 @@
 version: 1
 slug: "s-hyperliquidpositions-views-sidebarrootview-swift"
 primary_target: "Sources/HyperliquidPositions/Views/SidebarRootView.swift"
-related_targets: ["Sources/HyperliquidPositions/Views/RailView.swift","Sources/HyperliquidPositions/Views/HoverCardView.swift","Sources/HyperliquidPositions/Views/ExpandedSidebarView.swift","Sources/HyperliquidPositions/Views/NotchView.swift"]
+related_targets: ["Sources/HyperliquidPositions/Views/RailView.swift","Sources/HyperliquidPositions/Views/HoverCardView.swift","Sources/HyperliquidPositions/Views/ExpandedSidebarView.swift","Sources/HyperliquidPositions/Views/MarketViews.swift","Sources/HyperliquidPositions/Views/OnboardingView.swift","Sources/HyperliquidPositions/Views/NotchView.swift","Sources/HyperliquidPositions/Window/EdgePanel.swift"]
 ---
 
 # Edge Sidebar
 
 ## Scope and mode
 
-Native macOS operating surface covering the idle notch, compact position rail, per-asset hover inspector, and expanded all-position overview. Visitor mode: Operate.
+Native macOS operating surface covering the idle notch, compact asset rail, per-asset inspector, and expanded overview. The same anchored geometry switches between Hyperliquid Positions and a Binance-powered BTC, ETH, and SOL Market lens. Visitor mode: Operate.
 
 ## Audience and job
 
-Active Hyperliquid perpetual traders need to monitor open risk while working elsewhere. They should read direction and PnL at a glance, reveal exact position context without changing apps, and expand only when comparing the account as a whole.
+Active Hyperliquid perpetual traders need to monitor open risk and core market direction while working elsewhere. They should read PnL or spot movement at a glance, reveal exact context without changing apps, and expand only when comparing the whole account or all three markets.
 
 ## Task and content
 
-The surface presents live normalized positions, connection freshness, PnL, leverage, size, entry, mark, liquidation price, and liquidation distance. It opens the corresponding Hyperliquid market but never performs trading or requests authority.
+Positions presents connection freshness, PnL, leverage, size, entry, mark, liquidation price, and liquidation distance. Market presents public Binance spot price, 24-hour change, open, high, low, and position within the daily range. The utility can open a Hyperliquid market but never performs trading or requests wallet or exchange authority.
 
 ## Chosen direction
 
-The supplied edge-cockpit mockup is the visual authority: graphite instrument surfaces, mint live/profit treatment, red loss/risk treatment, tabular figures, restrained borders, and progressive disclosure from notch to rail to inspector to overview.
+The supplied edge-cockpit and onboarding references are the visual authority: graphite instrument surfaces, mint live/profit treatment, red loss/risk treatment, tabular figures, restrained borders, a tall trust-forward wallet form, and progressive disclosure from notch to rail to inspector to overview.
 
 ## Memorable moment
 
-Moving the pointer between asset marks causes one anchored inspector to fluidly replace its contents, preserving place while the market context changes.
+Moving the pointer between asset marks keeps one inspector alive while its content and vertical anchor settle over 460ms. Notch and rail resizing use a slower 480–500ms no-bounce curve, so the utility shifts attention rather than tearing down and rebuilding.
 
 ## Constraints
 
-Remain native, low-noise, low-overhead, keyboard accessible, readable without color alone, and usable across Spaces and full-screen apps. Temporary connection failures keep the last positions visible.
+Remain native, low-noise, low-overhead, keyboard accessible, readable without color alone, and usable across Spaces and full-screen apps. The AppKit host must accept its SwiftUI frame so the notch and rail never retain an invisible larger interaction rectangle. Temporary connection failures preserve the last positions and market quotes.
 
 ## Unresolved decisions
 

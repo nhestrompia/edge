@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-08-31T00:00:00Z",
-  "title": "Design System: Hyperliquid Positions",
+  "title": "Design System: edge",
   "extensions": {
     "colorMeta": {
       "graphite-canvas": {
@@ -84,7 +84,7 @@
       }
     },
     "typographyMeta": {
-      "headline": { "displayName": "Headline", "purpose": "Onboarding title and the largest position outcome." },
+      "headline": { "displayName": "Headline", "purpose": "The two-line onboarding promise." },
       "title": { "displayName": "Instrument Title", "purpose": "Product and asset names." },
       "body": { "displayName": "Body", "purpose": "Explanatory copy, actions, and metrics." },
       "label": { "displayName": "Instrument Label", "purpose": "Metric names, state badges, and compact status copy." }
@@ -93,14 +93,14 @@
       {
         "name": "floating-panel",
         "value": "-2px 10px 44px rgba(0,0,0,0.44)",
-        "purpose": "One broad offset shadow separates the floating utility body from the desktop."
+        "purpose": "One broad offset shadow separates free-floating inspector and expanded surfaces; edge-clipped notch and rail surfaces use borders only."
       }
     ],
     "motion": [
       {
         "name": "panel-state",
-        "value": "280–380ms snappy ease-out",
-        "purpose": "Notch, rail, inspector, and expanded-state transitions."
+        "value": "460–500ms smooth no-bounce deceleration",
+        "purpose": "Notch, rail, inspector, expanded-state, and Positions/Market transitions."
       },
       {
         "name": "micro-feedback",
@@ -126,9 +126,9 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Mint onboarding action with a quiet pressed state and keyboard focus.",
+      "description": "Deep-mint gradient onboarding action with mint text and keyboard focus.",
       "html": "<button class=\"ds-button-primary\">Track wallet</button>",
-      "css": ".ds-button-primary{height:45px;padding:0 16px;border:0;border-radius:12px;background:#1fe09e;color:#060a0a;font:700 14px -apple-system,BlinkMacSystemFont,sans-serif;transition:filter .18s ease-out}.ds-button-primary:hover{filter:brightness(1.06)}.ds-button-primary:active{filter:brightness(.92)}.ds-button-primary:focus-visible{outline:2px solid #f4f9f6;outline-offset:2px}"
+      "css": ".ds-button-primary{height:58px;padding:0 16px;border:1px solid rgba(31,224,158,.14);border-radius:15px;background:linear-gradient(90deg,rgba(31,224,158,.26),rgba(13,77,56,.78));color:#1fe09e;font:600 16px -apple-system,BlinkMacSystemFont,sans-serif;transition:filter .18s ease-out}.ds-button-primary:hover{filter:brightness(1.06)}.ds-button-primary:active{filter:brightness(.92)}.ds-button-primary:focus-visible{outline:2px solid #f4f9f6;outline-offset:2px}"
     },
     {
       "name": "Long Direction Badge",
@@ -149,9 +149,9 @@
     {
       "name": "Wallet Field",
       "kind": "input",
-      "description": "Native-height field for one public Ethereum address.",
+      "description": "Prominent field for one public Ethereum address.",
       "html": "<input class=\"ds-wallet-field\" aria-label=\"Public wallet address\" placeholder=\"0x…\">",
-      "css": ".ds-wallet-field{box-sizing:border-box;width:320px;height:46px;padding:0 13px;border:1px solid transparent;border-radius:12px;background:#121716;color:#f4f9f6;font:500 14px ui-monospace,SFMono-Regular,monospace}.ds-wallet-field::placeholder{color:#a8b8b3}.ds-wallet-field:hover{background:#1b1f1e}.ds-wallet-field:focus-visible{outline:0;border:1.5px solid #1fe09e}"
+      "css": ".ds-wallet-field{box-sizing:border-box;width:420px;height:58px;padding:0 17px;border:1px solid rgba(255,255,255,.25);border-radius:15px;background:#0b100f;color:#f4f9f6;font:500 17px ui-monospace,SFMono-Regular,monospace}.ds-wallet-field::placeholder{color:#a8b8b3}.ds-wallet-field:hover{background:#121716}.ds-wallet-field:focus-visible{outline:0;border:1.35px solid #1fe09e}"
     },
     {
       "name": "Liquidation Distance",
@@ -170,9 +170,9 @@
   ],
   "narrative": {
     "northStar": "The Quiet Edge Instrument",
-    "overview": "Hyperliquid Positions behaves like a small instrument mounted at the edge of a trader's workspace. It is precise and continuously available, but it refuses to compete with the work already on screen. Its identity comes from progressive disclosure. The system is native, dense, and restrained; expression belongs in silhouette and state transitions rather than decorative chrome.",
+    "overview": "edge behaves like a small instrument mounted at the edge of a trader's workspace. It keeps Hyperliquid positions or the core BTC, ETH, and SOL markets continuously available without competing with the work already on screen. Its identity comes from progressive disclosure and a single anchored geometry.",
     "keyCharacteristics": [
-      "Four-state disclosure: notch, rail, inspector, expanded board.",
+      "Four-state disclosure: notch, rail, inspector, expanded board, with Positions and Market lenses in the same geometry.",
       "Graphite instrument surfaces with one mint live voice.",
       "Tabular financial figures that do not shift as prices update.",
       "Authored asset marks and explicit freshness/demo truth.",
@@ -182,10 +182,10 @@
       { "name": "The Semantic Separation Rule", "body": "PnL color and liquidation-risk color are calculated independently; profitability never implies safety.", "section": "colors" },
       { "name": "The Stable Figure Rule", "body": "Every changing financial value uses monospaced or tabular digits and numeric content transitions.", "section": "typography" },
       { "name": "The One Edge Rule", "body": "Window size may change, but its chosen screen edge and vertical context do not.", "section": "layout" },
-      { "name": "The One Floating Body Rule", "body": "Elevation belongs to the utility against the desktop; content inside it is separated by tone and fine rules.", "section": "elevation" }
+      { "name": "The One Floating Body Rule", "body": "Elevation belongs to free-floating utility surfaces; edge-clipped notch and rail surfaces use tone and fine rules without shadows.", "section": "elevation" }
     ],
     "dos": [
-      "Do preserve the notch → rail → inspector → expanded disclosure sequence.",
+      "Do preserve the notch → rail → inspector → expanded disclosure sequence across Positions and Market.",
       "Do keep financial values aligned with tabular digits and update only the affected position.",
       "Do pair market colors with signs, labels, direction text, or numeric distance.",
       "Do label stale and synthetic states in words.",

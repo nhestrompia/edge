@@ -1,6 +1,6 @@
 ---
-name: Hyperliquid Positions
-description: A quiet native edge instrument for ambient Hyperliquid position monitoring.
+name: edge
+description: A quiet native edge instrument for ambient Hyperliquid position and core-market monitoring.
 colors:
   graphite-canvas: "#060a0a"
   graphite-surface: "#0b100f"
@@ -18,7 +18,7 @@ colors:
 typography:
   headline:
     fontFamily: "SF Pro, -apple-system, BlinkMacSystemFont, sans-serif"
-    fontSize: "27px"
+    fontSize: "34px"
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "-0.02em"
@@ -42,10 +42,10 @@ typography:
     letterSpacing: "normal"
 rounded:
   control: "9px"
-  field: "12px"
+  field: "15px"
   card: "14px"
   inspector: "18px"
-  panel: "24px"
+  panel: "26px"
   rail: "32px"
   pill: "999px"
 spacing:
@@ -67,8 +67,8 @@ components:
     rounded: "{rounded.card}"
     padding: "13px"
   button-primary:
-    backgroundColor: "{colors.live-mint}"
-    textColor: "{colors.graphite-canvas}"
+    backgroundColor: "{colors.live-mint-muted}"
+    textColor: "{colors.live-mint}"
     rounded: "{rounded.field}"
     padding: "14px 16px"
   side-badge-long:
@@ -83,19 +83,19 @@ components:
     padding: "4px 8px"
 ---
 
-# Design System: Hyperliquid Positions
+# Design System: edge
 
 ## Overview
 
 **Creative North Star: "The Quiet Edge Instrument"**
 
-Hyperliquid Positions behaves like a small instrument mounted at the edge of a trader's workspace. It is precise and continuously available, but it refuses to compete with the work already on screen. Its identity comes from progressive disclosure: a narrow mint signal becomes a position rail, one rail item grows an anchored inspector, and deliberate expansion reveals the full account.
+edge behaves like a small instrument mounted at the edge of a trader's workspace. It is precise and continuously available, but it refuses to compete with the work already on screen. Its identity comes from progressive disclosure: a narrow mint signal becomes an asset rail, one asset grows an anchored inspector, and deliberate expansion reveals either the position account or the BTC, ETH, and SOL market board.
 
 The system is native, dense, and restrained. Graphite layers provide the physical body; mint, red, and amber carry live market meaning; fine rules and stable figures carry structure. Expression belongs in the silhouette and state transitions rather than decorative chrome.
 
 **Key Characteristics:**
 
-- Four-state disclosure: notch, rail, inspector, expanded board.
+- Four-state disclosure: notch, rail, inspector, expanded board, with Positions and Market lenses inside the same geometry.
 - Graphite instrument surfaces with one mint live voice.
 - Tabular financial figures that do not shift as prices update.
 - Authored asset marks and explicit freshness/demo truth.
@@ -137,7 +137,7 @@ The palette is restrained: dark graphite owns almost the entire surface, while m
 
 ### Hierarchy
 
-- **Headline** (700, 27px, 1.15): onboarding title and the largest single PnL value.
+- **Headline** (700, 34px, 1.15): the two-line onboarding title. Position and market outcomes use smaller tabular summary styles.
 - **Title** (700, 16–18px, 1.2): product, asset, and position names.
 - **Summary Value** (700, 18–24px, tabular): account and position outcomes.
 - **Body** (400–600, 13–14px, 1.35): explanatory copy, actions, and metric values.
@@ -155,11 +155,11 @@ Spacing follows a compact 4/8/12/16/22/28 rhythm. Metric groups are tight; state
 
 ## Elevation & Depth
 
-Depth is structural. Near-black tonal layers separate the panel, grouped summary, cards, fields, and pressed controls. The floating instrument receives one broad, offset black shadow (`0.44` opacity, 20–24px radius, 8–12px vertical offset); inner components generally use a rule instead of another shadow.
+Depth is structural. Near-black tonal layers separate the panel, grouped summary, cards, fields, and pressed controls. Free-floating onboarding, inspector, and expanded surfaces can receive one broad shadow; the screen-attached notch and rail use a fine border only so clipped shadow pixels never leave a rectangular artifact beside the edge.
 
 ### Shadow Vocabulary
 
-- **Floating Panel:** soft black shadow, 20–24px radius, slight left offset, 8–12px downward offset. Used only by the notch, rail, inspector, expanded board, and onboarding shell.
+- **Floating Panel:** soft black shadow, 20–24px radius, slight left offset, 8–12px downward offset. Used by free-floating inspector and expanded surfaces; never by the edge-clipped notch or rail.
 - **Tonal Lift:** `graphite-raised` and `graphite-pressed`. Used for controls inside a panel instead of nested shadow stacks.
 
 **The One Floating Body Rule.** Elevation belongs to the utility against the desktop; content inside it is separated by tone and fine rules.
@@ -174,7 +174,7 @@ The notch is deliberately asymmetric: its desktop edge is fully rounded while it
 
 ### Buttons
 
-- **Primary:** mint fill, graphite text, 12px continuous corners, and a 45px target height.
+- **Primary:** a quiet deep-mint horizontal gradient with mint text, 15px continuous corners, and a 58px target height.
 - **Quiet:** raised graphite fill with primary text; pressed or hovered state moves to `graphite-pressed`.
 - **Icon:** native SF Symbol, 34px circular target when standalone, always carrying an accessibility label.
 - **Focus:** native keyboard semantics; the wallet field adds a 1.5px mint focus rule.
@@ -193,13 +193,21 @@ The notch is deliberately asymmetric: its desktop edge is fully rounded while it
 
 ### Inputs / Fields
 
-- **Style:** 12px corners, raised graphite fill, 46px height, monospaced public address text.
-- **Focus:** mint 1.5px rule and matching wallet icon treatment.
+- **Style:** 15px corners, graphite fill, 58px height, monospaced public address text.
+- **Focus:** mint 1.35px rule and matching wallet icon treatment.
 - **Error:** red icon and recovery-oriented copy below the field; the field does not disappear or reset.
 
 ### Navigation
 
-The notch opens on pointer approach. Rail assets are native buttons and Up/Down commands move the active inspector. Escape collapses one level. The rail footer expands the complete board; the expanded footer exposes collapse, connection state, and settings.
+The notch opens on pointer approach. Rail assets are native buttons and Up/Down commands move the active inspector. Positions and Market remain in the same anchored rail and switch with the footer controls. Escape collapses one level; the header menu also exposes collapse, while the expanded footer exposes Positions, Market, and Settings.
+
+### Market Quote
+
+BTC, ETH, and SOL use the same authored marks and stable numeric alignment as positions. The rail shows spot price plus 24-hour change; the inspector adds open, low, high, and a continuous range marker; the expanded board compares all three without introducing chart chrome. Binance freshness is labeled independently from Hyperliquid connectivity.
+
+## Motion
+
+Panel resizing and notch/rail/expanded disclosure use a 480–500ms no-bounce smooth curve. Inspector focus changes use 460ms and keep one surface alive while its asset, figures, and vertical anchor update. This creates natural deceleration without spring overshoot or teardown flashes. A pointer must leave the full rail-and-inspector region for 820ms before auto-hide begins. Reduce Motion replaces translation and scale with a 120ms opacity change or an immediate AppKit frame update.
 
 ### Liquidation Bar
 

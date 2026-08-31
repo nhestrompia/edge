@@ -12,39 +12,17 @@ struct ExpandedSidebarView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 16)
 
-            summary
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
-
-            HStack {
-                Text(positionCountLabel)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(HPTheme.textSecondary)
-                Spacer()
-                Text("Sorted by PnL")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(HPTheme.textSecondary)
-            }
-            .padding(.horizontal, 18)
-            .padding(.top, 15)
-            .padding(.bottom, 9)
-
-            if model.positions.isEmpty {
-                emptyState
+            if model.activeSection == .positions {
+                positionsContent
+                    .transition(.opacity)
             } else {
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 8) {
-                        ForEach(sortedPositions) { position in
-                            ExpandedPositionCard(position: position)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
-                }
+                ExpandedMarketContent()
+                    .transition(.opacity)
             }
 
             footer
         }
+        .animation(.smooth(duration: 0.42, extraBounce: 0), value: model.activeSection)
         .background {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(HPTheme.canvas.opacity(0.985))
@@ -61,7 +39,7 @@ struct ExpandedSidebarView: View {
             HyperliquidMark(size: 46)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Hyperliquid")
+                Text("edge")
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(HPTheme.textPrimary)
 
@@ -89,9 +67,9 @@ struct ExpandedSidebarView: View {
                     .foregroundStyle(HPTheme.warning)
             }
             HStack(spacing: 6) {
-                StatusDot(state: model.connectionState, size: 10)
-                if model.connectionState != .live {
-                    Text(model.connectionState.label)
+                StatusDot(state: model.activeConnectionState, size: 10)
+                if model.activeConnectionState != .live {
+                    Text(model.activeConnectionState.label)
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(HPTheme.textSecondary)
                 }
@@ -152,6 +130,41 @@ struct ExpandedSidebarView: View {
         )
     }
 
+    private var positionsContent: some View {
+        VStack(spacing: 0) {
+            summary
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+
+            HStack {
+                Text(positionCountLabel)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(HPTheme.textSecondary)
+                Spacer()
+                Text("Sorted by PnL")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(HPTheme.textSecondary)
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 15)
+            .padding(.bottom, 9)
+
+            if model.positions.isEmpty {
+                emptyState
+            } else {
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(spacing: 8) {
+                        ForEach(sortedPositions) { position in
+                            ExpandedPositionCard(position: position)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+                }
+            }
+        }
+    }
+
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "waveform.path")
@@ -173,28 +186,28 @@ struct ExpandedSidebarView: View {
     private var footer: some View {
         HStack(spacing: 0) {
             Button {
-                model.showRail()
+                model.switchSection(to: .positions)
             } label: {
-                Label("Collapse", systemImage: "sidebar.right")
-                    .labelStyle(.iconOnly)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                footerIcon("briefcase", active: model.activeSection == .positions)
             }
-            .help("Collapse sidebar")
+            .help("Positions")
+            .accessibilityLabel("Positions")
+            .accessibilityAddTraits(model.activeSection == .positions ? .isSelected : [])
 
-            VStack(spacing: 4) {
-                StatusDot(state: model.connectionState, size: 7)
-                Text(model.connectionState.label)
-                    .font(.system(size: 9, weight: .semibold))
+            Button {
+                model.switchSection(to: .market)
+            } label: {
+                footerIcon("chart.line.uptrend.xyaxis", active: model.activeSection == .market)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(HPTheme.textSecondary)
+            .help("Markets")
+            .accessibilityLabel("Markets")
+            .accessibilityAddTraits(model.activeSection == .market ? .isSelected : [])
 
             SettingsLink {
-                Label("Settings", systemImage: "gearshape")
-                    .labelStyle(.iconOnly)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                footerIcon("gearshape", active: false)
             }
             .help("Settings")
+            .accessibilityLabel("Settings")
         }
         .buttonStyle(ExpandedFooterButtonStyle())
         .foregroundStyle(HPTheme.textSecondary)
@@ -202,6 +215,19 @@ struct ExpandedSidebarView: View {
         .overlay(alignment: .top) {
             Rectangle().fill(HPTheme.line).frame(height: 1)
         }
+    }
+
+    private func footerIcon(_ systemName: String, active: Bool) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: systemName)
+                .font(.system(size: 17, weight: .medium))
+            if active {
+                StatusDot(state: model.activeConnectionState, size: 6)
+                    .offset(x: 7, y: -5)
+            }
+        }
+        .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var sortedPositions: [Position] {

@@ -12,15 +12,18 @@ struct SidebarRootView: View {
                 switch model.panelMode {
                 case .onboarding:
                     OnboardingView()
-                        .transition(reduceMotion ? .opacity : .scale(scale: 0.96).combined(with: .opacity))
+                        .transition(reduceMotion ? .opacity : .scale(scale: 0.985).combined(with: .opacity))
 
                 case .notch:
-                    NotchView(connectionState: model.connectionState)
+                    NotchView(connectionState: model.activeConnectionState)
                         .frame(width: HPLayout.notchSize.width, height: HPLayout.notchSize.height)
                         .transition(
                             reduceMotion
                                 ? .opacity
-                                : .move(edge: model.preferences.sidebarEdge == .right ? .trailing : .leading)
+                                : .scale(
+                                    scale: 0.94,
+                                    anchor: model.preferences.sidebarEdge == .right ? .trailing : .leading
+                                ).combined(with: .opacity)
                         )
 
                 case .rail:
@@ -36,7 +39,7 @@ struct SidebarRootView: View {
                         reduceMotion
                             ? .opacity
                             : .scale(
-                                scale: 0.96,
+                                scale: 0.985,
                                 anchor: model.preferences.sidebarEdge == .right ? .trailing : .leading
                             ).combined(with: .opacity)
                     )
@@ -52,7 +55,9 @@ struct SidebarRootView: View {
             }
         }
         .onExitCommand {
-            if model.panelMode == .expanded {
+            if model.panelMode == .onboarding {
+                return
+            } else if model.panelMode == .expanded {
                 model.showRail()
             } else {
                 model.hidePositions()
@@ -60,19 +65,26 @@ struct SidebarRootView: View {
         }
         .onMoveCommand { direction in
             guard model.panelMode == .rail else { return }
+            let offset: Int
             switch direction {
-            case .down:
-                model.selectAdjacentPosition(offset: 1)
-            case .up:
-                model.selectAdjacentPosition(offset: -1)
-            default:
-                break
+            case .down: offset = 1
+            case .up: offset = -1
+            default: return
+            }
+            if model.activeSection == .positions {
+                model.selectAdjacentPosition(offset: offset)
+            } else {
+                model.selectAdjacentMarket(offset: offset)
             }
         }
         .preferredColorScheme(.dark)
         .animation(
-            reduceMotion ? .easeOut(duration: 0.12) : .snappy(duration: 0.34, extraBounce: 0.04),
+            reduceMotion ? .easeOut(duration: 0.12) : .smooth(duration: 0.5, extraBounce: 0),
             value: model.panelMode
+        )
+        .animation(
+            reduceMotion ? .easeOut(duration: 0.12) : .smooth(duration: 0.46, extraBounce: 0),
+            value: model.activeSection
         )
     }
 
@@ -87,27 +99,45 @@ struct SidebarRootView: View {
             )
             .frame(width: HPLayout.railWidth, height: size.height)
 
-            if let position = model.hoveredPosition {
+            if model.activeSection == .positions, let position = model.hoveredPosition {
                 HoverCardView(position: position)
-                    .id(position.id)
                     .offset(
-                        x: model.preferences.sidebarEdge == .right ? -HPLayout.railWidth + 1 : HPLayout.railWidth - 1,
+                        x: inspectorHorizontalOffset,
                         y: inspectorOffset(for: position, panelHeight: size.height)
                     )
-                    .transition(
-                        reduceMotion
-                            ? .opacity
-                            : .asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .move(edge: .top).combined(with: .opacity)
-                            )
+                    .transition(inspectorTransition)
+            } else if model.activeSection == .market, let quote = model.hoveredMarketQuote {
+                MarketHoverCardView(quote: quote)
+                    .offset(
+                        x: inspectorHorizontalOffset,
+                        y: inspectorOffset(for: quote, panelHeight: size.height)
                     )
+                    .transition(inspectorTransition)
             }
         }
     }
 
+    private var inspectorHorizontalOffset: CGFloat {
+        model.preferences.sidebarEdge == .right ? -HPLayout.railWidth + 1 : HPLayout.railWidth - 1
+    }
+
+    private var inspectorTransition: AnyTransition {
+        if reduceMotion { return .opacity }
+        return .scale(
+            scale: 0.985,
+            anchor: model.preferences.sidebarEdge == .right ? .trailing : .leading
+        ).combined(with: .opacity)
+    }
+
     private func inspectorOffset(for position: Position, panelHeight: CGFloat) -> CGFloat {
         guard let index = model.positions.firstIndex(where: { $0.id == position.id }) else { return 0 }
+        let rowCenter = HPLayout.railTopPadding + CGFloat(index) * HPLayout.positionRowHeight + HPLayout.positionRowHeight / 2
+        let ideal = rowCenter - HPLayout.inspectorHeight / 2
+        return min(max(ideal, 8), max(8, panelHeight - HPLayout.inspectorHeight - 8))
+    }
+
+    private func inspectorOffset(for quote: MarketQuote, panelHeight: CGFloat) -> CGFloat {
+        guard let index = model.marketQuotes.firstIndex(where: { $0.id == quote.id }) else { return 0 }
         let rowCenter = HPLayout.railTopPadding + CGFloat(index) * HPLayout.positionRowHeight + HPLayout.positionRowHeight / 2
         let ideal = rowCenter - HPLayout.inspectorHeight / 2
         return min(max(ideal, 8), max(8, panelHeight - HPLayout.inspectorHeight - 8))

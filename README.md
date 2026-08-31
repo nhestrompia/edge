@@ -1,6 +1,6 @@
-# Hyperliquid Positions for macOS
+# edge for macOS
 
-A read-only macOS edge utility for monitoring open Hyperliquid perpetual positions. It uses a public wallet address only—no wallet connection, signature, private key, or trading API key.
+A read-only macOS edge utility for monitoring open Hyperliquid perpetual positions plus live BTC, ETH, and SOL spot prices. It uses a public wallet address only—no wallet connection, signature, private key, or trading API key.
 
 ## Requirements
 
@@ -19,18 +19,26 @@ For a local interface demo with sample positions:
 HYPERLIQUID_DEMO=1 swift run
 ```
 
+To exercise rapid notch, rail, inspector, asset, and expanded-panel resizing with the five-position regression fixture:
+
+```sh
+HYPERLIQUID_DEMO=1 EDGE_LAYOUT_STRESS=1 swift run
+```
+
 ## Build the app bundle
 
 ```sh
 chmod +x Scripts/build-app.sh
 Scripts/build-app.sh
-open "dist/Hyperliquid Positions.app"
+open "dist/edge.app"
 ```
 
-The bundle is created at `dist/Hyperliquid Positions.app` and ad-hoc signed for local use. A Developer ID signature and notarization are still required for distribution outside the Mac that built it.
+The bundle is created at `dist/edge.app` and ad-hoc signed for local use. A Developer ID signature and notarization are still required for distribution outside the Mac that built it.
 
 ## Data flow
 
 - `POST https://api.hyperliquid.xyz/info` with `clearinghouseState` reconciles open positions.
 - `wss://api.hyperliquid.xyz/ws` streams `allMids` and `clearinghouseState` updates.
-- The UI consumes the normalized `Position` model and does not depend on Hyperliquid response types.
+- `GET https://data-api.binance.vision/api/v3/ticker/24hr` seeds the BTC/USDT, ETH/USDT, and SOL/USDT market view.
+- `wss://data-stream.binance.vision` streams one-second mini-ticker updates for those three public markets.
+- The UI consumes stable `Position` and `MarketQuote` models rather than exchange response types.

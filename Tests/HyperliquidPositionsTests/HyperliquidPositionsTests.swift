@@ -1,7 +1,25 @@
 import XCTest
+import SwiftUI
 @testable import HyperliquidPositions
 
 final class HyperliquidPositionsTests: XCTestCase {
+    @MainActor
+    func testPanelHostsSwiftUIInsideNeutralAppKitContainer() {
+        let container = EdgePanelCoordinator.makeContentView(rootView: Text("Test"))
+
+        XCTAssertFalse(container is NSHostingView<Text>)
+        XCTAssertEqual(container.subviews.count, 1)
+
+        guard let hostingView = container.subviews.first as? NSHostingView<Text> else {
+            return XCTFail("Expected one NSHostingView inside the neutral container")
+        }
+        XCTAssertTrue(hostingView.sizingOptions.isEmpty)
+        XCTAssertTrue(hostingView.safeAreaRegions.isEmpty)
+        XCTAssertTrue(hostingView.sceneBridgingOptions.isEmpty)
+        XCTAssertTrue(hostingView.autoresizingMask.contains(.width))
+        XCTAssertTrue(hostingView.autoresizingMask.contains(.height))
+    }
+
     func testWalletAddressValidation() {
         XCTAssertTrue(WalletAddressValidator.isValid("0x71f41234567890abcdef1234567890abcdef1234"))
         XCTAssertTrue(WalletAddressValidator.isValid("0x0000000000000000000000000000000000000000"))
@@ -85,5 +103,51 @@ final class HyperliquidPositionsTests: XCTestCase {
         )
 
         XCTAssertEqual(position.liquidationDistance, 20)
+    }
+
+    func testBinanceTickerNormalization() throws {
+        let payload = Data(
+            """
+            {
+              "symbol": "BTCUSDT",
+              "lastPrice": "109333.12000000",
+              "openPrice": "106820.00000000",
+              "highPrice": "110180.00000000",
+              "lowPrice": "105940.00000000",
+              "closeTime": 1788134400000
+            }
+            """.utf8
+        )
+
+        let ticker = try JSONDecoder().decode(BinanceTickerDTO.self, from: payload)
+        let quote = try BinanceAPI.normalize(ticker)
+
+        XCTAssertEqual(quote.symbol, "BTC")
+        XCTAssertEqual(quote.price, 109_333.12, accuracy: 0.001)
+        XCTAssertEqual(quote.changePercent24h, 2.352, accuracy: 0.001)
+    }
+
+    func testBinanceMiniTickerStreamDecoding() throws {
+        let message = URLSessionWebSocketTask.Message.string(
+            """
+            {
+              "stream": "solusdt@miniTicker",
+              "data": {
+                "E": 1788134400000,
+                "s": "SOLUSDT",
+                "c": "186.42",
+                "o": "187.81",
+                "h": "191.20",
+                "l": "183.04"
+              }
+            }
+            """
+        )
+
+        let quote = try BinanceWebSocket.decode(message)
+
+        XCTAssertEqual(quote.symbol, "SOL")
+        XCTAssertEqual(quote.price, 186.42)
+        XCTAssertEqual(quote.changePercent24h, -0.7401, accuracy: 0.0001)
     }
 }

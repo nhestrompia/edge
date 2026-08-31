@@ -32,11 +32,10 @@ struct NotchView: View {
                 )
                 .strokeBorder(HPTheme.line, lineWidth: 0.7)
             }
-            .shadow(color: HPTheme.panelShadow, radius: 16, x: -3, y: 8)
         }
         .contentShape(Rectangle())
         .onHover { hovered = $0 }
         .animation(.easeOut(duration: 0.18), value: hovered)
-        .accessibilityLabel("Show Hyperliquid positions")
+        .accessibilityLabel("Open edge sidebar")
     }
 }

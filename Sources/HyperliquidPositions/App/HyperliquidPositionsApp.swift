@@ -14,8 +14,14 @@ struct HyperliquidPositionsApp: App {
     @StateObject private var model = AppModel.shared
 
     var body: some Scene {
-        MenuBarExtra("Hyperliquid Positions", systemImage: "waveform.path.ecg") {
+        MenuBarExtra("edge", systemImage: "waveform.path.ecg") {
             Button("Show Positions") {
+                model.switchSection(to: .positions)
+                model.showPositions()
+            }
+
+            Button("Show Markets") {
+                model.switchSection(to: .market)
                 model.showPositions()
             }
 
@@ -29,7 +35,7 @@ struct HyperliquidPositionsApp: App {
 
             Divider()
 
-            Button("Quit Hyperliquid Positions") {
+            Button("Quit edge") {
                 NSApp.terminate(nil)
             }
             .keyboardShortcut("q")

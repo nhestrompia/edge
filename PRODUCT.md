@@ -16,11 +16,11 @@ Active Hyperliquid perpetual traders who keep positions open while using a Mac f
 
 ## Product Purpose
 
-Keep a trader's currently open Hyperliquid perpetual positions continuously glanceable at the edge of the Mac. Success means setup takes only a public wallet address, live position changes remain visible without interrupting work, and the product is useful without any trading permissions.
+Keep a trader's Hyperliquid positions and the core BTC, ETH, and SOL market prices continuously glanceable at the edge of the Mac. Success means setup takes only a public wallet address, live market changes remain visible without interrupting work, and the product is useful without any trading permissions.
 
 ## Positioning
 
-Hyperliquid Positions is an ambient, native macOS position monitor: it collapses to a quiet screen-edge notch and reveals position context in place. It is not a portfolio dashboard or a trading client.
+edge is an ambient native macOS market instrument: it collapses to a quiet screen-edge notch and reveals either Hyperliquid position context or a focused Binance market view in place. It is not a portfolio dashboard or a trading client.
 
 ## Operating Context
 
@@ -30,15 +30,17 @@ The app remains running throughout the day while the user works in other applica
 
 - v0 is strictly read-only and accepts one public Ethereum wallet address.
 - It retrieves public Hyperliquid perpetual account state, normalizes open positions, updates prices and PnL, reconciles account changes periodically, and opens relevant Hyperliquid pages in the default browser.
+- It retrieves public Binance spot market data for BTC/USDT, ETH/USDT, and SOL/USDT through an initial REST snapshot plus live WebSocket mini-ticker updates. It never requests a Binance account or API key.
+- Users can switch the rail and expanded sidebar between Positions and Market views without moving or reopening the utility.
 - The sidebar displays asset and live PnL. Hovering reveals PnL percentage, position size, entry price, mark price, liquidation price, leverage, and liquidation distance.
 - The utility supports launch at login, always-on-top behavior, screen-edge placement, vertical dragging, bounded scrolling, empty and stale states, and smooth transitions between hovered assets.
-- v0 excludes trading, signing, private keys, API keys, deposits, withdrawals, charts, portfolio analytics, spot holdings, vaults, copy trading, and multi-exchange support.
+- v0 excludes trading, signing, private keys, API keys, deposits, withdrawals, charts, portfolio analytics, user spot holdings, vaults, copy trading, and multi-exchange account aggregation.
 - Privacy mode and customization are planned follow-on work; the architecture should not make them costly to add.
 - Low idle CPU, minimal memory, efficient network updates, and no continuous decorative animation are hard requirements.
 
 ## Brand Commitments
 
-- Product name: Hyperliquid Positions.
+- Product name: edge.
 - Core proposition: “Your Hyperliquid positions, always in sight.”
 - Trust message: read-only, no wallet connection, no private keys.
 - The supplied visual reference is binding for the initial interaction language: a dark graphite utility surface, mint positive states, red negative/risk states, an idle edge notch, a compact asset rail, a left-opening hover card, and an expanded overview.
