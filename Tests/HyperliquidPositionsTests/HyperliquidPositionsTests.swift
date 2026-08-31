@@ -20,6 +20,12 @@ final class HyperliquidPositionsTests: XCTestCase {
         XCTAssertTrue(hostingView.autoresizingMask.contains(.height))
     }
 
+    func testRailItemCountKeepsSectionSwitchesAtOneHeight() {
+        XCTAssertEqual(HPLayout.railItemCount(positions: 5, markets: 2), 5)
+        XCTAssertEqual(HPLayout.railItemCount(positions: 2, markets: 5), 5)
+        XCTAssertEqual(HPLayout.railItemCount(positions: 0, markets: 0), 1)
+    }
+
     func testWalletAddressValidation() {
         XCTAssertTrue(WalletAddressValidator.isValid("0x71f41234567890abcdef1234567890abcdef1234"))
         XCTAssertTrue(WalletAddressValidator.isValid("0x0000000000000000000000000000000000000000"))

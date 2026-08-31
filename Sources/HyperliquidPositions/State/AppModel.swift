@@ -197,7 +197,7 @@ final class AppModel: ObservableObject {
         isPointerInside = true
         collapseTask?.cancel()
         if panelMode == .notch {
-            animate(HPMotion.panel) {
+            animate(HPMotion.expand) {
                 panelMode = .rail
             }
         }
@@ -205,7 +205,7 @@ final class AppModel: ObservableObject {
 
     func pointerExited() {
         isPointerInside = false
-        guard panelMode != .onboarding else { return }
+        guard panelMode != .onboarding, !isCaptureMode else { return }
         collapseTask?.cancel()
         collapseTask = Task { [weak self] in
             try? await Task.sleep(for: HPMotion.autoHideDelay)
@@ -266,7 +266,7 @@ final class AppModel: ObservableObject {
 
     func expand() {
         collapseTask?.cancel()
-        animate(HPMotion.panel) {
+        animate(HPMotion.expand) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             panelMode = .expanded
@@ -299,7 +299,7 @@ final class AppModel: ObservableObject {
             }
             return
         }
-        animate(HPMotion.panel) {
+        animate(panelMode == .notch ? HPMotion.expand : HPMotion.panel) {
             panelMode = .rail
         }
     }

@@ -4,8 +4,8 @@ import SwiftUI
 /*
  THESIS: A market-aware edge instrument that removes tab switching; it refuses the miniature-dashboard default by resting as a notch and revealing depth only in place.
  OWN-WORLD: Near-black graphite panels, mint live/profit states, explicit red risk states, fine instrument rules, rounded native controls, and tabular financial figures.
- STORY: The trader supplies one public address, sees live positions at the screen edge, inspects one by hovering, and expands only when the whole account matters.
- FIRST VIEWPORT: A 30-point right-edge notch opens into a 112-point vertical rail; the active asset grows a left-facing inspector, while click reveals a 438-point all-position board.
+ STORY: The trader supplies one public address, sees live positions at the screen edge, inspects one by hovering, opens a position page by clicking, and expands only when the whole account matters.
+ FIRST VIEWPORT: A 30-point right-edge notch opens into a 112-point vertical rail; the active asset grows a left-facing inspector, while the expanded board reveals the whole account.
  FORM: User-pinned edge cockpit, seed f1eedd09. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
  */
 @main

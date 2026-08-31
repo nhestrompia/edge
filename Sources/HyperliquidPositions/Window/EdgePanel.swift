@@ -60,6 +60,8 @@ final class EdgePanelCoordinator: NSObject {
     private var pendingFrameUpdate: Task<Void, Never>?
     private var lastRequestedFrame: CGRect?
     private var lastAppliedMode: PanelMode?
+    private var expansionEndWorkItem: DispatchWorkItem?
+    private var expansionInProgress = false
 
     init(model: AppModel) {
         self.model = model
@@ -224,6 +226,12 @@ final class EdgePanelCoordinator: NSObject {
             return
         }
 
+        if model.panelMode == .notch {
+            expansionEndWorkItem?.cancel()
+            expansionEndWorkItem = nil
+            expansionInProgress = false
+        }
+
         guard let screen = screenForPanel() else { return }
         let visibleFrame = screen.visibleFrame
         let size = targetSize(in: visibleFrame)
@@ -269,14 +277,27 @@ final class EdgePanelCoordinator: NSObject {
 
             let isCapturing = ProcessInfo.processInfo.environment["HYPERLIQUID_CAPTURE_DIR"] != nil
             if animated, panel.isVisible, !isCapturing, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                let startsExpansion = (lastAppliedMode == .notch && model.panelMode == .rail)
+                    || (lastAppliedMode == .rail && model.panelMode == .expanded)
+                if startsExpansion {
+                    beginExpansionWindow()
+                }
                 let isInspectorResize = lastAppliedMode == .rail
                     && model.panelMode == .rail
                     && abs(panel.frame.width - targetFrame.width) > 0.5
+                let isExpanding = startsExpansion
+                    || (expansionInProgress && model.panelMode == .rail)
                 NSAnimationContext.runAnimationGroup { context in
-                    context.duration = isInspectorResize
-                        ? HPMotion.inspectorDuration
-                        : HPMotion.panelDuration
-                    context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.82, 0.28, 1)
+                    if isExpanding {
+                        context.duration = HPMotion.expandDuration
+                        context.timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0, 0.2, 1)
+                    } else if isInspectorResize {
+                        context.duration = HPMotion.inspectorDuration
+                        context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.82, 0.28, 1)
+                    } else {
+                        context.duration = HPMotion.panelDuration
+                        context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.82, 0.28, 1)
+                    }
                     panel.animator().setFrame(targetFrame, display: true)
                 }
             } else {
@@ -291,6 +312,20 @@ final class EdgePanelCoordinator: NSObject {
         if model.panelMode == .onboarding {
             panel.makeKey()
         }
+    }
+
+    private func beginExpansionWindow() {
+        expansionEndWorkItem?.cancel()
+        expansionInProgress = true
+
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.expansionInProgress = false
+        }
+        expansionEndWorkItem = workItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + HPMotion.expandDuration,
+            execute: workItem
+        )
     }
 
     private func targetSize(in visibleFrame: CGRect) -> CGSize {
@@ -315,7 +350,10 @@ final class EdgePanelCoordinator: NSObject {
     }
 
     private func railHeight(in visibleFrame: CGRect) -> CGFloat {
-        let itemCount = model.activeSection == .positions ? model.positions.count : model.marketQuotes.count
+        let itemCount = HPLayout.railItemCount(
+            positions: model.positions.count,
+            markets: model.marketQuotes.count
+        )
         let contentHeight = HPLayout.railTopPadding
             + CGFloat(max(itemCount, 1)) * HPLayout.positionRowHeight
             + HPLayout.railFooterHeight

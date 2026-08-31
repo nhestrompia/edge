@@ -101,26 +101,21 @@ struct ExpandedSidebarView: View {
         HStack(spacing: 12) {
             HyperliquidMark(size: 46)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text("edge")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(HPTheme.textPrimary)
-
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(model.trackedAddress, forType: .string)
-                } label: {
-                    HStack(spacing: 5) {
-                        Text(model.abbreviatedAddress)
-                            .font(.system(size: 12, weight: .medium).monospaced())
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 11, weight: .medium))
-                    }
-                    .foregroundStyle(HPTheme.textSecondary)
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(model.trackedAddress, forType: .string)
+            } label: {
+                HStack(spacing: 5) {
+                    Text(model.abbreviatedAddress)
+                        .font(.system(size: 16, weight: .bold).monospaced())
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .buttonStyle(.plain)
-                .help("Copy wallet address")
+                .foregroundStyle(HPTheme.textPrimary)
             }
+            .buttonStyle(.plain)
+            .help("Copy wallet address")
+            .accessibilityLabel("Copy wallet address")
 
             Spacer()
             if model.isShowingDemoData {
@@ -129,27 +124,21 @@ struct ExpandedSidebarView: View {
                     .tracking(0.6)
                     .foregroundStyle(HPTheme.warning)
             }
-            HStack(spacing: 6) {
-                StatusDot(state: model.activeConnectionState, size: 10)
-                if model.activeConnectionState != .live {
-                    Text(model.activeConnectionState.label)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(HPTheme.textSecondary)
+            HStack(spacing: 4) {
+                PressableIconButton(
+                    systemName: "wallet.pass",
+                    label: "Change wallet"
+                ) {
+                    model.changeWallet()
+                }
+
+                PressableIconButton(
+                    systemName: "rectangle.leftthird.inset.filled",
+                    label: "Collapse"
+                ) {
+                    model.showRail()
                 }
             }
-            Menu {
-                Button("Change Wallet…") { model.changeWallet() }
-                Divider()
-                Button("Collapse") { model.showRail() }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(HPTheme.textSecondary)
-                    .frame(width: 34, height: 34)
-                    .background(Circle().fill(HPTheme.surfaceRaised))
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
         }
         .contentShape(Rectangle())
         .gesture(
@@ -445,16 +434,10 @@ struct ExpandedSidebarView: View {
     }
 
     private func footerIcon(_ systemName: String, active: Bool) -> some View {
-        ZStack(alignment: .topTrailing) {
-            Image(systemName: systemName)
-                .font(.system(size: 17, weight: .medium))
-            if active {
-                StatusDot(state: model.activeConnectionState, size: 6)
-                    .offset(x: 7, y: -5)
-            }
-        }
-        .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        Image(systemName: systemName)
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var filteredPositions: [Position] {

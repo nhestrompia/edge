@@ -85,7 +85,7 @@ struct RailView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(model.positions) { position in
                         Button {
-                            model.hover(positionID: position.id)
+                            model.openHyperliquid(for: position.coin)
                         } label: {
                             RailPositionView(position: position)
                                 .frame(height: HPLayout.positionRowHeight)
@@ -94,7 +94,8 @@ struct RailView: View {
                         .onHover { hovering in
                             if hovering { model.hover(positionID: position.id) }
                         }
-                        .accessibilityHint("Shows the position inspector")
+                        .help("Open \(position.coin) on Hyperliquid")
+                        .accessibilityHint("Opens this position on Hyperliquid")
                     }
                 }
             }
@@ -124,18 +125,11 @@ struct RailView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            ZStack(alignment: .topTrailing) {
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(isActive ? HPTheme.positive : HPTheme.textSecondary)
-
-                if isActive {
-                    StatusDot(state: model.activeConnectionState, size: 5)
-                        .offset(x: 5, y: -4)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(isActive ? HPTheme.positive : HPTheme.textSecondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

@@ -81,19 +81,6 @@ struct MarketHoverCardView: View {
                     }
                 }
                 Spacer()
-                Text(model.marketConnectionState.label.uppercased())
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(0.7)
-                    .foregroundStyle(model.marketConnectionState == .live ? HPTheme.positive : HPTheme.warning)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(
-                        Capsule().fill(
-                            model.marketConnectionState == .live
-                                ? HPTheme.positiveMuted
-                                : HPTheme.warning.opacity(0.14)
-                        )
-                    )
             }
 
             Text("Market Price")

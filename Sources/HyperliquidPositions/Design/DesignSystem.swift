@@ -29,14 +29,20 @@ enum HPLayout {
     static let positionRowHeight: CGFloat = 106
     static let railTopPadding: CGFloat = 18
     static let railFooterHeight: CGFloat = 62
+
+    static func railItemCount(positions: Int, markets: Int) -> Int {
+        max(max(positions, markets), 1)
+    }
 }
 
 enum HPMotion {
     static let panelDuration: TimeInterval = 0.36
+    static let expandDuration: TimeInterval = 0.50
     static let inspectorDuration: TimeInterval = 0.24
     static let autoHideDelay: Duration = .milliseconds(280)
     static let frameUpdateDebounce: Duration = .milliseconds(8)
     static let panel = Animation.timingCurve(0.22, 0.82, 0.28, 1, duration: panelDuration)
+    static let expand = Animation.timingCurve(0.4, 0, 0.2, 1, duration: expandDuration)
     static let inspector = Animation.timingCurve(0.22, 0.82, 0.28, 1, duration: inspectorDuration)
     static let control = Animation.easeOut(duration: 0.16)
 }
