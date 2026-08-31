@@ -93,6 +93,116 @@ struct TokenMark: View {
     }
 }
 
+enum AssetIconSource {
+    static let hyperliquidBaseURL = URL(string: "https://app.hyperliquid.xyz/coins/")!
+    static let binanceIconURL = URL(string: "https://bin.bnbstatic.com/static/images/common/favicon.ico")!
+
+    /// Hyperliquid's position and market responses contain the asset symbol, but
+    /// not an image URL. The public app serves the matching official asset mark
+    /// at this stable path, so symbols from the API can resolve without another
+    /// metadata request. Invalid symbols stay on the local fallback mark.
+    static func url(for coin: String) -> URL? {
+        let asset = coin.trimmingCharacters(in: .whitespacesAndNewlines)
+        let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_:@#"))
+
+        guard
+            !asset.isEmpty,
+            asset.count <= 64,
+            asset.unicodeScalars.allSatisfy(allowedCharacters.contains)
+        else {
+            return nil
+        }
+
+        return hyperliquidBaseURL.appendingPathComponent("\(asset).svg")
+    }
+}
+
+struct AssetIcon: View {
+    let coin: String
+    var size: CGFloat = 44
+
+    var body: some View {
+        ZStack {
+            TokenMark(coin: coin, size: size)
+                .accessibilityHidden(true)
+
+            if let url = AssetIconSource.url(for: coin) {
+                AsyncImage(url: url, transaction: Transaction(animation: nil)) { phase in
+                    switch phase {
+                    case let .success(image):
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: size * 0.94, height: size * 0.94)
+                            .clipShape(Circle())
+                    case .empty, .failure:
+                        Color.clear
+                            .frame(width: size, height: size)
+                    @unknown default:
+                        Color.clear
+                            .frame(width: size, height: size)
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay {
+            Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 0.8)
+        }
+        .accessibilityLabel("\(coin) asset")
+    }
+}
+
+struct SourceMark: View {
+    let source: MarketSource
+    var size: CGFloat = 16
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(source == .binance ? Color(red: 0.96, green: 0.73, blue: 0.18).opacity(0.13) : HPTheme.positive.opacity(0.09))
+
+            switch source {
+            case .binance:
+                AsyncImage(url: AssetIconSource.binanceIconURL, transaction: Transaction(animation: nil)) { phase in
+                    switch phase {
+                    case let .success(image):
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .padding(size * 0.13)
+                    case .empty, .failure:
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: size * 0.62, weight: .bold))
+                            .foregroundStyle(HPTheme.warning)
+                    @unknown default:
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: size * 0.62, weight: .bold))
+                            .foregroundStyle(HPTheme.warning)
+                    }
+                }
+            case .hyperliquid:
+                HyperliquidMark(size: size)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .accessibilityLabel(source.label)
+    }
+}
+
+enum MarketSource: Equatable {
+    case binance
+    case hyperliquid
+
+    var label: String {
+        switch self {
+        case .binance: "Binance"
+        case .hyperliquid: "Hyperliquid"
+        }
+    }
+}
+
 private struct HyperliquidGlyphShape: Shape {
     func path(in rect: CGRect) -> Path {
         let x = { (value: CGFloat) in rect.minX + value * rect.width }
@@ -277,6 +387,7 @@ struct PressableIconButton: View {
     let label: String
     let action: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hovered = false
 
     var body: some View {
@@ -289,6 +400,7 @@ struct PressableIconButton: View {
         }
         .buttonStyle(.plain)
         .onHover { hovered = $0 }
+        .animation(reduceMotion ? nil : HPMotion.control, value: hovered)
         .accessibilityLabel(label)
     }
 }

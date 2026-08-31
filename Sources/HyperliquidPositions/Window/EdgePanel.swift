@@ -12,9 +12,10 @@ final class EdgePanelCoordinator: NSObject {
     private let model: AppModel
     private let panel: UtilityPanel
     private var cancellables = Set<AnyCancellable>()
-    private var dragOriginY: CGFloat?
+    private var dragOrigin: CGPoint?
     private var pendingFrameUpdate: Task<Void, Never>?
     private var lastRequestedFrame: CGRect?
+    private var lastAppliedMode: PanelMode?
 
     init(model: AppModel) {
         self.model = model
@@ -68,6 +69,9 @@ final class EdgePanelCoordinator: NSObject {
 
     private func installContent() {
         let root = SidebarRootView(
+            onCloseOnboarding: { [weak self] in
+                self?.closeOnboarding()
+            },
             onDragChanged: { [weak self] translation in
                 self?.dragChanged(translation)
             },
@@ -100,6 +104,19 @@ final class EdgePanelCoordinator: NSObject {
     }
 
     private func observeModel() {
+        model.$isPanelVisible
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] isVisible in
+                guard let self else { return }
+                if isVisible {
+                    self.updateFrame(animated: false)
+                } else {
+                    self.panel.orderOut(nil)
+                }
+            }
+            .store(in: &cancellables)
+
         Publishers.CombineLatest4(
             model.$panelMode,
             model.$hoveredPositionID,
@@ -148,14 +165,20 @@ final class EdgePanelCoordinator: NSObject {
     }
 
     private func updateFrame(animated: Bool) {
+        guard model.isPanelVisible else {
+            panel.orderOut(nil)
+            return
+        }
+
         guard let screen = screenForPanel() else { return }
         let visibleFrame = screen.visibleFrame
         let size = targetSize(in: visibleFrame)
 
         let storedCenterY = model.preferences.panelCenterY
         let currentCenterY = panel.frame.isEmpty ? 0 : panel.frame.midY
+        let isEnteringOnboarding = model.panelMode == .onboarding && lastAppliedMode != .onboarding
         let preferredCenterY: CGFloat
-        if model.panelMode == .onboarding {
+        if isEnteringOnboarding || panel.frame.isEmpty {
             preferredCenterY = visibleFrame.midY
         } else if currentCenterY > 0 {
             preferredCenterY = currentCenterY
@@ -171,30 +194,41 @@ final class EdgePanelCoordinator: NSObject {
         )
 
         let edgeOverlap: CGFloat = 7
-        let x: CGFloat
+        let preferredX: CGFloat
         if model.panelMode == .onboarding {
-            x = visibleFrame.midX - size.width / 2
+            preferredX = isEnteringOnboarding || panel.frame.isEmpty
+                ? visibleFrame.midX - size.width / 2
+                : panel.frame.minX
         } else if model.preferences.sidebarEdge == .right {
-            x = visibleFrame.maxX - size.width + edgeOverlap
+            preferredX = visibleFrame.maxX - size.width + edgeOverlap
         } else {
-            x = visibleFrame.minX - edgeOverlap
+            preferredX = visibleFrame.minX - edgeOverlap
         }
 
+        let x = model.panelMode == .onboarding
+            ? min(max(preferredX, visibleFrame.minX + 8), visibleFrame.maxX - size.width - 8)
+            : preferredX
         let targetFrame = CGRect(origin: CGPoint(x: x, y: y), size: size)
-        guard lastRequestedFrame != targetFrame else { return }
-        lastRequestedFrame = targetFrame
 
-        let isCapturing = ProcessInfo.processInfo.environment["HYPERLIQUID_CAPTURE_DIR"] != nil
-        if animated, panel.isVisible, !isCapturing, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.48
-                context.timingFunction = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
-                panel.animator().setFrame(targetFrame, display: true)
+        if lastRequestedFrame != targetFrame {
+            lastRequestedFrame = targetFrame
+
+            let isCapturing = ProcessInfo.processInfo.environment["HYPERLIQUID_CAPTURE_DIR"] != nil
+            if animated, panel.isVisible, !isCapturing, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                let isInspectorResize = lastAppliedMode == .rail
+                    && model.panelMode == .rail
+                    && abs(panel.frame.width - targetFrame.width) > 0.5
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = isInspectorResize ? 0.24 : 0.34
+                    context.timingFunction = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
+                    panel.animator().setFrame(targetFrame, display: true)
+                }
+            } else {
+                panel.setFrame(targetFrame, display: true)
             }
-        } else {
-            panel.setFrame(targetFrame, display: true)
         }
 
+        lastAppliedMode = model.panelMode
         panel.orderFrontRegardless()
         if model.panelMode == .onboarding {
             panel.makeKey()
@@ -230,26 +264,38 @@ final class EdgePanelCoordinator: NSObject {
         return min(max(contentHeight, 242), min(630, visibleFrame.height - 20))
     }
 
-    private func dragChanged(_ translation: CGFloat) {
-        guard model.panelMode != .onboarding, let screen = screenForPanel() else { return }
-        if dragOriginY == nil {
-            dragOriginY = panel.frame.origin.y
+    private func dragChanged(_ translation: CGSize) {
+        guard let screen = screenForPanel() else { return }
+        if dragOrigin == nil {
+            dragOrigin = panel.frame.origin
         }
-        guard let dragOriginY else { return }
+        guard let dragOrigin else { return }
 
         let visibleFrame = screen.visibleFrame
-        let targetY = dragOriginY - translation
+        let targetX = model.panelMode == .onboarding
+            ? dragOrigin.x + translation.width
+            : panel.frame.minX
+        let targetY = dragOrigin.y - translation.height
+        let clampedX = model.panelMode == .onboarding
+            ? min(max(targetX, visibleFrame.minX + 8), visibleFrame.maxX - panel.frame.width - 8)
+            : panel.frame.minX
         let clampedY = min(
             max(targetY, visibleFrame.minY + 8),
             visibleFrame.maxY - panel.frame.height - 8
         )
-        panel.setFrameOrigin(CGPoint(x: panel.frame.minX, y: clampedY))
+        panel.setFrameOrigin(CGPoint(x: clampedX, y: clampedY))
         lastRequestedFrame = panel.frame
     }
 
     private func dragEnded() {
-        dragOriginY = nil
+        dragOrigin = nil
         model.preferences.panelCenterY = panel.frame.midY
+    }
+
+    private func closeOnboarding() {
+        guard model.panelMode == .onboarding else { return }
+        panel.resignKey()
+        model.dismissOnboarding()
     }
 
     private func screenForPanel() -> NSScreen? {

@@ -3,7 +3,7 @@ import SwiftUI
 
 struct ExpandedSidebarView: View {
     @EnvironmentObject private var model: AppModel
-    let onDragChanged: (CGFloat) -> Void
+    let onDragChanged: (CGSize) -> Void
     let onDragEnded: () -> Void
 
     var body: some View {
@@ -22,7 +22,6 @@ struct ExpandedSidebarView: View {
 
             footer
         }
-        .animation(.smooth(duration: 0.42, extraBounce: 0), value: model.activeSection)
         .background {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(HPTheme.canvas.opacity(0.985))
@@ -91,7 +90,7 @@ struct ExpandedSidebarView: View {
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 2)
-                .onChanged { value in onDragChanged(value.translation.height) }
+                .onChanged { value in onDragChanged(value.translation) }
                 .onEnded { _ in onDragEnded() }
         )
     }
@@ -255,7 +254,7 @@ private struct ExpandedPositionCard: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
-                TokenMark(coin: position.coin, size: 38)
+                AssetIcon(coin: position.coin, size: 38)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(position.coin)-PERP")
                         .font(.system(size: 16, weight: .bold))
@@ -329,6 +328,6 @@ private struct ExpandedPositionCard: View {
                 }
         }
         .onHover { hovered = $0 }
-        .animation(.easeOut(duration: 0.18), value: hovered)
+        .animation(HPMotion.control, value: hovered)
     }
 }

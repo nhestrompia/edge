@@ -3,7 +3,7 @@ import SwiftUI
 struct RailView: View {
     @EnvironmentObject private var model: AppModel
 
-    let onDragChanged: (CGFloat) -> Void
+    let onDragChanged: (CGSize) -> Void
     let onDragEnded: () -> Void
 
     var body: some View {
@@ -157,7 +157,7 @@ struct RailView: View {
             .contentShape(Rectangle().inset(by: -8))
             .gesture(
                 DragGesture(minimumDistance: 2)
-                    .onChanged { value in onDragChanged(value.translation.height) }
+                    .onChanged { value in onDragChanged(value.translation) }
                     .onEnded { _ in onDragEnded() }
             )
             .accessibilityLabel("Drag sidebar vertically")
@@ -180,19 +180,18 @@ struct RailView: View {
 
 private struct RailPositionView: View {
     @EnvironmentObject private var model: AppModel
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let position: Position
 
     var body: some View {
         VStack(spacing: 7) {
             ZStack(alignment: .topTrailing) {
-                TokenMark(coin: position.coin, size: 47)
+                AssetIcon(coin: position.coin, size: 47)
                     .overlay {
                         if model.hoveredPositionID == position.id {
                             Circle()
                                 .stroke(HPTheme.positive.opacity(0.68), lineWidth: 2)
                                 .padding(-4)
-                                .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+                                .transition(.opacity)
                         }
                     }
 

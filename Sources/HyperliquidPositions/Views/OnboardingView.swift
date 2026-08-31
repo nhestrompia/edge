@@ -2,12 +2,17 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var walletAddress = ""
+    @State private var closeHovered = false
     @FocusState private var addressFocused: Bool
+    let onDragChanged: (CGSize) -> Void
+    let onDragEnded: () -> Void
+    let onClose: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HyperliquidMark(size: 58)
+            topBar
 
             Spacer(minLength: 40)
 
@@ -35,7 +40,47 @@ struct OnboardingView: View {
         .frame(width: HPLayout.onboardingSize.width, height: HPLayout.onboardingSize.height)
         .background(onboardingSurface)
         .onAppear { addressFocused = true }
-        .animation(.easeOut(duration: 0.22), value: model.onboardingError)
+        .animation(reduceMotion ? nil : HPMotion.control, value: model.onboardingError)
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 0) {
+            HyperliquidMark(size: 58)
+
+            Spacer(minLength: 0)
+
+            Capsule()
+                .fill(HPTheme.lineStrong.opacity(0.72))
+                .frame(width: 28, height: 3)
+                .accessibilityHidden(true)
+
+            Spacer(minLength: 0)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(HPTheme.textSecondary)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(closeHovered ? HPTheme.surfacePressed : HPTheme.surfaceRaised))
+                    .overlay {
+                        Circle()
+                            .strokeBorder(HPTheme.line, lineWidth: 0.8)
+                    }
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .onHover { closeHovered = $0 }
+            .help("Close setup")
+            .accessibilityLabel("Close setup")
+        }
+        .frame(height: 58)
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 2)
+                .onChanged { value in onDragChanged(value.translation) }
+                .onEnded { _ in onDragEnded() }
+        )
+        .help("Drag the top area to move setup")
     }
 
     private var walletForm: some View {

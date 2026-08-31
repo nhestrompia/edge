@@ -3,6 +3,7 @@ import SwiftUI
 struct NotchView: View {
     let connectionState: ConnectionState
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hovered = false
 
     var body: some View {
@@ -35,7 +36,7 @@ struct NotchView: View {
         }
         .contentShape(Rectangle())
         .onHover { hovered = $0 }
-        .animation(.easeOut(duration: 0.18), value: hovered)
+        .animation(reduceMotion ? nil : HPMotion.control, value: hovered)
         .accessibilityLabel("Open edge sidebar")
     }
 }

@@ -30,6 +30,12 @@ enum HPLayout {
     static let railFooterHeight: CGFloat = 62
 }
 
+enum HPMotion {
+    static let panel = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.34)
+    static let inspector = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.22)
+    static let control = Animation.easeOut(duration: 0.16)
+}
+
 enum HPFormat {
     private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()

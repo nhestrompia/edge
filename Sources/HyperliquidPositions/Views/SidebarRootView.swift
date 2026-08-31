@@ -2,8 +2,8 @@ import SwiftUI
 
 struct SidebarRootView: View {
     @EnvironmentObject private var model: AppModel
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let onDragChanged: (CGFloat) -> Void
+    let onCloseOnboarding: () -> Void
+    let onDragChanged: (CGSize) -> Void
     let onDragEnded: () -> Void
 
     var body: some View {
@@ -11,20 +11,17 @@ struct SidebarRootView: View {
             ZStack(alignment: .topTrailing) {
                 switch model.panelMode {
                 case .onboarding:
-                    OnboardingView()
-                        .transition(reduceMotion ? .opacity : .scale(scale: 0.985).combined(with: .opacity))
+                    OnboardingView(
+                        onDragChanged: onDragChanged,
+                        onDragEnded: onDragEnded,
+                        onClose: onCloseOnboarding
+                    )
+                    .transition(.opacity)
 
                 case .notch:
                     NotchView(connectionState: model.activeConnectionState)
                         .frame(width: HPLayout.notchSize.width, height: HPLayout.notchSize.height)
-                        .transition(
-                            reduceMotion
-                                ? .opacity
-                                : .scale(
-                                    scale: 0.94,
-                                    anchor: model.preferences.sidebarEdge == .right ? .trailing : .leading
-                                ).combined(with: .opacity)
-                        )
+                        .transition(.opacity)
 
                 case .rail:
                     railLayer(in: geometry.size)
@@ -35,14 +32,7 @@ struct SidebarRootView: View {
                         onDragChanged: onDragChanged,
                         onDragEnded: onDragEnded
                     )
-                    .transition(
-                        reduceMotion
-                            ? .opacity
-                            : .scale(
-                                scale: 0.985,
-                                anchor: model.preferences.sidebarEdge == .right ? .trailing : .leading
-                            ).combined(with: .opacity)
-                    )
+                    .transition(.opacity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: model.preferences.sidebarEdge == .right ? .topTrailing : .topLeading)
@@ -56,7 +46,7 @@ struct SidebarRootView: View {
         }
         .onExitCommand {
             if model.panelMode == .onboarding {
-                return
+                onCloseOnboarding()
             } else if model.panelMode == .expanded {
                 model.showRail()
             } else {
@@ -78,14 +68,6 @@ struct SidebarRootView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .animation(
-            reduceMotion ? .easeOut(duration: 0.12) : .smooth(duration: 0.5, extraBounce: 0),
-            value: model.panelMode
-        )
-        .animation(
-            reduceMotion ? .easeOut(duration: 0.12) : .smooth(duration: 0.46, extraBounce: 0),
-            value: model.activeSection
-        )
     }
 
     @ViewBuilder
@@ -122,11 +104,7 @@ struct SidebarRootView: View {
     }
 
     private var inspectorTransition: AnyTransition {
-        if reduceMotion { return .opacity }
-        return .scale(
-            scale: 0.985,
-            anchor: model.preferences.sidebarEdge == .right ? .trailing : .leading
-        ).combined(with: .opacity)
+        .opacity
     }
 
     private func inspectorOffset(for position: Position, panelHeight: CGFloat) -> CGFloat {

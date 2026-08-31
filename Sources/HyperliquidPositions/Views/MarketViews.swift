@@ -26,19 +26,18 @@ struct MarketRailList: View {
 
 private struct MarketRailRow: View {
     @EnvironmentObject private var model: AppModel
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let quote: MarketQuote
 
     var body: some View {
         VStack(spacing: 7) {
-            TokenMark(coin: quote.symbol, size: 47)
+            AssetIcon(coin: quote.symbol, size: 47)
                 .overlay {
-                    if model.hoveredMarketSymbol == quote.symbol {
-                        Circle()
-                            .stroke(HPTheme.positive.opacity(0.68), lineWidth: 2)
-                            .padding(-4)
-                            .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
-                    }
+                        if model.hoveredMarketSymbol == quote.symbol {
+                            Circle()
+                                .stroke(HPTheme.positive.opacity(0.68), lineWidth: 2)
+                                .padding(-4)
+                                .transition(.opacity)
+                        }
                 }
 
             VStack(spacing: 1) {
@@ -68,15 +67,18 @@ struct MarketHoverCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                TokenMark(coin: quote.symbol, size: 41)
+                AssetIcon(coin: quote.symbol, size: 41)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(quote.pair)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(HPTheme.textPrimary)
-                    Text("BINANCE SPOT")
-                        .font(.system(size: 9, weight: .bold))
-                        .tracking(0.7)
-                        .foregroundStyle(HPTheme.textSecondary)
+                    HStack(spacing: 4) {
+                        SourceMark(source: .binance, size: 13)
+                        Text("BINANCE SPOT")
+                            .font(.system(size: 9, weight: .bold))
+                            .tracking(0.7)
+                            .foregroundStyle(HPTheme.textSecondary)
+                    }
                 }
                 Spacer()
                 Text(model.marketConnectionState.label.uppercased())
@@ -145,6 +147,9 @@ struct MarketHoverCardView: View {
                         .stroke(HPTheme.lineStrong, lineWidth: 0.7)
                 }
                 .shadow(color: HPTheme.panelShadow, radius: 22, x: -3, y: 11)
+        }
+        .transaction { transaction in
+            transaction.animation = nil
         }
     }
 }
@@ -223,7 +228,7 @@ private struct ExpandedMarketCard: View {
     var body: some View {
         VStack(spacing: 14) {
             HStack(spacing: 11) {
-                TokenMark(coin: quote.symbol, size: 40)
+                AssetIcon(coin: quote.symbol, size: 40)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(quote.pair)
                         .font(.system(size: 16, weight: .bold))

@@ -9,7 +9,7 @@ struct HoverCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                TokenMark(coin: position.coin, size: 41)
+                AssetIcon(coin: position.coin, size: 41)
                 Text("\(position.coin)-PERP")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(HPTheme.textPrimary)
@@ -73,6 +73,11 @@ struct HoverCardView: View {
                 .shadow(color: HPTheme.panelShadow, radius: 22, x: -3, y: 11)
         }
         .accessibilityElement(children: .contain)
+        // The inspector moves as one anchored surface. Its figures should swap in
+        // place instead of running a second, slower numeric animation on hover.
+        .transaction { transaction in
+            transaction.animation = nil
+        }
     }
 }
 

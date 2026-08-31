@@ -41,6 +41,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var positions: [Position] = []
     @Published private(set) var marketQuotes: [MarketQuote] = []
     @Published var panelMode: PanelMode
+    @Published private(set) var isPanelVisible = true
     @Published var activeSection: SidebarSection = .positions
     @Published var hoveredPositionID: Position.ID?
     @Published var hoveredMarketSymbol: String?
@@ -161,7 +162,7 @@ final class AppModel: ObservableObject {
             positions = fetchedPositions
             lastUpdated = .now
             connectionState = .live
-            animate(.smooth(duration: 0.5, extraBounce: 0)) {
+            animate(HPMotion.panel) {
                 panelMode = preferences.autoHide ? .notch : .rail
             }
             beginMonitoring()
@@ -173,6 +174,7 @@ final class AppModel: ObservableObject {
 
     func changeWallet() {
         stopMonitoring()
+        isPanelVisible = true
         preferences.walletAddress = ""
         positions = []
         marketQuotes = []
@@ -180,13 +182,20 @@ final class AppModel: ObservableObject {
         hoveredMarketSymbol = nil
         activeSection = .positions
         onboardingError = nil
-        panelMode = .onboarding
+        animate(HPMotion.panel) {
+            panelMode = .onboarding
+        }
+    }
+
+    func dismissOnboarding() {
+        guard panelMode == .onboarding else { return }
+        isPanelVisible = false
     }
 
     func pointerEntered() {
         collapseTask?.cancel()
         if panelMode == .notch {
-            animate(.smooth(duration: 0.5, extraBounce: 0)) {
+            animate(HPMotion.panel) {
                 panelMode = .rail
             }
         }
@@ -201,7 +210,7 @@ final class AppModel: ObservableObject {
             if self.preferences.autoHide {
                 self.collapseToNotch()
             } else {
-                self.animate(.smooth(duration: 0.46, extraBounce: 0)) {
+                self.animate(HPMotion.inspector) {
                     self.hoveredPositionID = nil
                     self.hoveredMarketSymbol = nil
                 }
@@ -212,7 +221,7 @@ final class AppModel: ObservableObject {
     func hover(positionID: Position.ID?) {
         collapseTask?.cancel()
         guard hoveredPositionID != positionID else { return }
-        animate(.smooth(duration: 0.46, extraBounce: 0)) {
+        animate(HPMotion.inspector) {
             hoveredPositionID = positionID
         }
     }
@@ -220,7 +229,7 @@ final class AppModel: ObservableObject {
     func hover(marketSymbol: String?) {
         collapseTask?.cancel()
         guard hoveredMarketSymbol != marketSymbol else { return }
-        animate(.smooth(duration: 0.46, extraBounce: 0)) {
+        animate(HPMotion.inspector) {
             hoveredMarketSymbol = marketSymbol
         }
     }
@@ -228,7 +237,7 @@ final class AppModel: ObservableObject {
     func switchSection(to section: SidebarSection) {
         guard activeSection != section else { return }
         collapseTask?.cancel()
-        animate(.smooth(duration: 0.48, extraBounce: 0)) {
+        animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             activeSection = section
@@ -254,7 +263,7 @@ final class AppModel: ObservableObject {
 
     func expand() {
         collapseTask?.cancel()
-        animate(.smooth(duration: 0.5, extraBounce: 0)) {
+        animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             panelMode = .expanded
@@ -263,7 +272,7 @@ final class AppModel: ObservableObject {
 
     func showRail() {
         collapseTask?.cancel()
-        animate(.smooth(duration: 0.48, extraBounce: 0)) {
+        animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             panelMode = .rail
@@ -272,7 +281,7 @@ final class AppModel: ObservableObject {
 
     func hidePositions() {
         guard panelMode != .onboarding else { return }
-        animate(.smooth(duration: 0.48, extraBounce: 0)) {
+        animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             panelMode = .notch
@@ -280,11 +289,14 @@ final class AppModel: ObservableObject {
     }
 
     func showPositions() {
+        isPanelVisible = true
         guard WalletAddressValidator.isValid(trackedAddress) else {
-            panelMode = .onboarding
+            animate(HPMotion.panel) {
+                panelMode = .onboarding
+            }
             return
         }
-        animate(.smooth(duration: 0.48, extraBounce: 0)) {
+        animate(HPMotion.panel) {
             panelMode = .rail
         }
     }
@@ -296,7 +308,7 @@ final class AppModel: ObservableObject {
     }
 
     private func collapseToNotch() {
-        animate(.smooth(duration: 0.5, extraBounce: 0)) {
+        animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             panelMode = .notch
