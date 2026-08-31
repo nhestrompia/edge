@@ -63,6 +63,7 @@ final class AppModel: ObservableObject {
     private var marketRefreshTask: Task<Void, Never>?
     private var marketStreamTask: Task<Void, Never>?
     private var collapseTask: Task<Void, Never>?
+    private var isPointerInside = false
     private var preferencesCancellable: AnyCancellable?
     private let isDemoMode: Bool
     private let isCaptureMode: Bool
@@ -193,6 +194,7 @@ final class AppModel: ObservableObject {
     }
 
     func pointerEntered() {
+        isPointerInside = true
         collapseTask?.cancel()
         if panelMode == .notch {
             animate(HPMotion.panel) {
@@ -202,11 +204,12 @@ final class AppModel: ObservableObject {
     }
 
     func pointerExited() {
+        isPointerInside = false
         guard panelMode != .onboarding else { return }
         collapseTask?.cancel()
         collapseTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(820))
-            guard !Task.isCancelled, let self else { return }
+            try? await Task.sleep(for: HPMotion.autoHideDelay)
+            guard !Task.isCancelled, let self, !self.isPointerInside else { return }
             if self.preferences.autoHide {
                 self.collapseToNotch()
             } else {

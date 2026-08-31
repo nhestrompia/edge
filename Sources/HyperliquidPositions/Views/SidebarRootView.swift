@@ -16,33 +16,22 @@ struct SidebarRootView: View {
                         onDragEnded: onDragEnded,
                         onClose: onCloseOnboarding
                     )
-                    .transition(.opacity)
 
                 case .notch:
                     NotchView(connectionState: model.activeConnectionState)
                         .frame(width: HPLayout.notchSize.width, height: HPLayout.notchSize.height)
-                        .transition(.opacity)
 
                 case .rail:
                     railLayer(in: geometry.size)
-                        .transition(.opacity)
 
                 case .expanded:
                     ExpandedSidebarView(
                         onDragChanged: onDragChanged,
                         onDragEnded: onDragEnded
                     )
-                    .transition(.opacity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: model.preferences.sidebarEdge == .right ? .topTrailing : .topLeading)
-        }
-        .onHover { hovering in
-            if hovering {
-                model.pointerEntered()
-            } else {
-                model.pointerExited()
-            }
         }
         .onExitCommand {
             if model.panelMode == .onboarding {
@@ -117,7 +106,7 @@ struct SidebarRootView: View {
     private func inspectorOffset(for quote: MarketQuote, panelHeight: CGFloat) -> CGFloat {
         guard let index = model.marketQuotes.firstIndex(where: { $0.id == quote.id }) else { return 0 }
         let rowCenter = HPLayout.railTopPadding + CGFloat(index) * HPLayout.positionRowHeight + HPLayout.positionRowHeight / 2
-        let ideal = rowCenter - HPLayout.inspectorHeight / 2
-        return min(max(ideal, 8), max(8, panelHeight - HPLayout.inspectorHeight - 8))
+        let ideal = rowCenter - HPLayout.marketInspectorHeight / 2
+        return min(max(ideal, 8), max(8, panelHeight - HPLayout.marketInspectorHeight - 8))
     }
 }

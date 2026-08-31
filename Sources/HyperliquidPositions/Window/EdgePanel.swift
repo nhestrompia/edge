@@ -7,6 +7,50 @@ final class UtilityPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
+private final class PanelContentView: NSView {
+    var onHoverChanged: ((Bool) -> Void)?
+
+    private var trackingArea: NSTrackingArea?
+    private var isPointerInside = false
+
+    override func updateTrackingAreas() {
+        if let trackingArea {
+            removeTrackingArea(trackingArea)
+        }
+
+        let trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.activeAlways, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+        self.trackingArea = trackingArea
+        super.updateTrackingAreas()
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        setPointerInside(true)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        let pointerIsStillInside = window.map { window in
+            bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil))
+        } ?? false
+        setPointerInside(pointerIsStillInside)
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        setPointerInside(true)
+    }
+
+    private func setPointerInside(_ inside: Bool) {
+        guard isPointerInside != inside else { return }
+        isPointerInside = inside
+        onHoverChanged?(inside)
+    }
+}
+
 @MainActor
 final class EdgePanelCoordinator: NSObject {
     private let model: AppModel
@@ -81,10 +125,19 @@ final class EdgePanelCoordinator: NSObject {
         )
         .environmentObject(model)
 
-        panel.contentView = Self.makeContentView(rootView: root)
+        panel.contentView = Self.makeContentView(rootView: root) { [weak self] hovering in
+            if hovering {
+                self?.model.pointerEntered()
+            } else {
+                self?.model.pointerExited()
+            }
+        }
     }
 
-    static func makeContentView<Content: View>(rootView: Content) -> NSView {
+    static func makeContentView<Content: View>(
+        rootView: Content,
+        onHoverChanged: ((Bool) -> Void)? = nil
+    ) -> NSView {
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.sizingOptions = []
         hostingView.safeAreaRegions = []
@@ -96,7 +149,8 @@ final class EdgePanelCoordinator: NSObject {
 
         // Keep SwiftUI out of NSWindow sizing. A direct NSHostingView contentView can
         // feed its animated content size back into AppKit while the panel is resizing.
-        let containerView = NSView(frame: .zero)
+        let containerView = PanelContentView(frame: .zero)
+        containerView.onHoverChanged = onHoverChanged
         containerView.wantsLayer = true
         containerView.layer?.backgroundColor = NSColor.clear.cgColor
         containerView.addSubview(hostingView)
@@ -158,7 +212,7 @@ final class EdgePanelCoordinator: NSObject {
     private func scheduleFrameUpdate(animated: Bool) {
         pendingFrameUpdate?.cancel()
         pendingFrameUpdate = Task { [weak self] in
-            await Task.yield()
+            try? await Task.sleep(for: HPMotion.frameUpdateDebounce)
             guard !Task.isCancelled else { return }
             self?.updateFrame(animated: animated)
         }
@@ -219,8 +273,10 @@ final class EdgePanelCoordinator: NSObject {
                     && model.panelMode == .rail
                     && abs(panel.frame.width - targetFrame.width) > 0.5
                 NSAnimationContext.runAnimationGroup { context in
-                    context.duration = isInspectorResize ? 0.24 : 0.34
-                    context.timingFunction = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
+                    context.duration = isInspectorResize
+                        ? HPMotion.inspectorDuration
+                        : HPMotion.panelDuration
+                    context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.82, 0.28, 1)
                     panel.animator().setFrame(targetFrame, display: true)
                 }
             } else {
@@ -229,7 +285,9 @@ final class EdgePanelCoordinator: NSObject {
         }
 
         lastAppliedMode = model.panelMode
-        panel.orderFrontRegardless()
+        if !panel.isVisible {
+            panel.orderFrontRegardless()
+        }
         if model.panelMode == .onboarding {
             panel.makeKey()
         }

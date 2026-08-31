@@ -94,13 +94,20 @@ struct TokenMark: View {
 }
 
 enum AssetIconSource {
+    static let coinGeckoImageBaseURL = URL(string: "https://coin-images.coingecko.com/coins/images/")!
     static let hyperliquidBaseURL = URL(string: "https://app.hyperliquid.xyz/coins/")!
     static let binanceIconURL = URL(string: "https://bin.bnbstatic.com/static/images/common/favicon.ico")!
 
-    /// Hyperliquid's position and market responses contain the asset symbol, but
-    /// not an image URL. The public app serves the matching official asset mark
-    /// at this stable path, so symbols from the API can resolve without another
-    /// metadata request. Invalid symbols stay on the local fallback mark.
+    private static let canonicalAssetImageURLs: [String: URL] = [
+        "BTC": coinGeckoImageBaseURL.appendingPathComponent("1/large/bitcoin.png"),
+        "ETH": coinGeckoImageBaseURL.appendingPathComponent("279/large/ethereum.png"),
+        "SOL": coinGeckoImageBaseURL.appendingPathComponent("4128/large/solana.png")
+    ]
+
+    /// Exchange responses contain asset symbols, but not image URLs. Use exact
+    /// CoinGecko IDs for the core markets so a symbol cannot resolve to the
+    /// wrong token. Other Hyperliquid symbols use Hyperliquid's official mark
+    /// endpoint; invalid symbols stay on the local fallback mark.
     static func url(for coin: String) -> URL? {
         let asset = coin.trimmingCharacters(in: .whitespacesAndNewlines)
         let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_:@#"))
@@ -113,7 +120,8 @@ enum AssetIconSource {
             return nil
         }
 
-        return hyperliquidBaseURL.appendingPathComponent("\(asset).svg")
+        return canonicalAssetImageURLs[asset.uppercased()]
+            ?? hyperliquidBaseURL.appendingPathComponent("\(asset).svg")
     }
 }
 
@@ -122,10 +130,7 @@ struct AssetIcon: View {
     var size: CGFloat = 44
 
     var body: some View {
-        ZStack {
-            TokenMark(coin: coin, size: size)
-                .accessibilityHidden(true)
-
+        Group {
             if let url = AssetIconSource.url(for: coin) {
                 AsyncImage(url: url, transaction: Transaction(animation: nil)) { phase in
                     switch phase {
@@ -133,22 +138,18 @@ struct AssetIcon: View {
                         image
                             .resizable()
                             .scaledToFit()
-                            .frame(width: size * 0.94, height: size * 0.94)
-                            .clipShape(Circle())
+                            .frame(width: size, height: size)
                     case .empty, .failure:
-                        Color.clear
-                            .frame(width: size, height: size)
+                        TokenMark(coin: coin, size: size)
                     @unknown default:
-                        Color.clear
-                            .frame(width: size, height: size)
+                        TokenMark(coin: coin, size: size)
                     }
                 }
+            } else {
+                TokenMark(coin: coin, size: size)
             }
         }
         .frame(width: size, height: size)
-        .overlay {
-            Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 0.8)
-        }
         .accessibilityLabel("\(coin) asset")
     }
 }

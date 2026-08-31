@@ -118,27 +118,11 @@ struct MarketHoverCardView: View {
             }
             .padding(.top, 24)
 
-            MarketRangeBar(quote: quote)
-                .padding(.top, 25)
-
-            HStack {
-                Text("24h range")
-                    .foregroundStyle(HPTheme.textSecondary)
-                Spacer()
-                Text(model.marketConnectionState == .live ? "Updated live" : "Last quote kept")
-                    .foregroundStyle(
-                        model.marketConnectionState == .live
-                            ? HPTheme.positive
-                            : HPTheme.textSecondary
-                    )
-            }
-            .font(.system(size: 13, weight: .medium))
-            .padding(.top, 9)
         }
         .padding(.leading, pointsRight ? 22 : 42)
         .padding(.trailing, pointsRight ? 42 : 22)
         .padding(.vertical, 21)
-        .frame(width: HPLayout.inspectorWidth, height: HPLayout.inspectorHeight, alignment: .topLeading)
+        .frame(width: HPLayout.inspectorWidth, height: HPLayout.marketInspectorHeight, alignment: .topLeading)
         .background {
             InspectorBubbleShape(pointsRight: pointsRight)
                 .fill(HPTheme.canvas.opacity(0.985))
@@ -257,7 +241,6 @@ private struct ExpandedMarketCard: View {
                 MetricView(label: "High", value: HPFormat.marketPrice(quote.highPrice24h), alignment: .trailing)
             }
 
-            MarketRangeBar(quote: quote)
         }
         .padding(14)
         .background {
@@ -268,39 +251,5 @@ private struct ExpandedMarketCard: View {
                         .strokeBorder(HPTheme.lineStrong, lineWidth: 0.8)
                 }
         }
-    }
-}
-
-private struct MarketRangeBar: View {
-    let quote: MarketQuote
-
-    private var progress: Double {
-        let spread = quote.highPrice24h - quote.lowPrice24h
-        guard spread > 0 else { return 0.5 }
-        return min(max((quote.price - quote.lowPrice24h) / spread, 0), 1)
-    }
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.07))
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [HPTheme.negative.opacity(0.72), HPTheme.positive],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                Circle()
-                    .fill(HPTheme.textPrimary)
-                    .frame(width: 10, height: 10)
-                    .shadow(color: Color.black.opacity(0.5), radius: 3)
-                    .offset(x: max(0, min(geometry.size.width - 10, geometry.size.width * progress - 5)))
-            }
-        }
-        .frame(height: 7)
-        .accessibilityLabel("24 hour price range")
-        .accessibilityValue("Current price is \(Int(progress * 100)) percent through the range")
     }
 }

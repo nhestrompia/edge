@@ -151,10 +151,14 @@ final class HyperliquidPositionsTests: XCTestCase {
         XCTAssertEqual(quote.changePercent24h, -0.7401, accuracy: 0.0001)
     }
 
-    func testAssetIconURLUsesTheOfficialHyperliquidPath() {
+    func testAssetIconURLUsesCanonicalCoinGeckoPathsForCoreMarkets() {
         XCTAssertEqual(
             AssetIconSource.url(for: "BTC")?.absoluteString,
-            "https://app.hyperliquid.xyz/coins/BTC.svg"
+            "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png"
+        )
+        XCTAssertEqual(
+            AssetIconSource.url(for: "SOL")?.absoluteString,
+            "https://coin-images.coingecko.com/coins/images/4128/large/solana.png"
         )
         XCTAssertEqual(
             AssetIconSource.url(for: "xyz:ABC")?.absoluteString,

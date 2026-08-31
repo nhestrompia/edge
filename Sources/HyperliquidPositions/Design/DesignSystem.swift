@@ -23,6 +23,7 @@ enum HPLayout {
     static let railWidth: CGFloat = 112
     static let inspectorWidth: CGFloat = 386
     static let inspectorHeight: CGFloat = 302
+    static let marketInspectorHeight: CGFloat = 230
     static let expandedWidth: CGFloat = 438
     static let onboardingSize = CGSize(width: 486, height: 626)
     static let positionRowHeight: CGFloat = 106
@@ -31,8 +32,12 @@ enum HPLayout {
 }
 
 enum HPMotion {
-    static let panel = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.34)
-    static let inspector = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.22)
+    static let panelDuration: TimeInterval = 0.36
+    static let inspectorDuration: TimeInterval = 0.24
+    static let autoHideDelay: Duration = .milliseconds(280)
+    static let frameUpdateDebounce: Duration = .milliseconds(8)
+    static let panel = Animation.timingCurve(0.22, 0.82, 0.28, 1, duration: panelDuration)
+    static let inspector = Animation.timingCurve(0.22, 0.82, 0.28, 1, duration: inspectorDuration)
     static let control = Animation.easeOut(duration: 0.16)
 }
 
