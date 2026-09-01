@@ -130,45 +130,18 @@ struct ExpandedMarketContent: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: 7) {
-                    Text("Markets")
-                        .font(.system(size: 23, weight: .bold))
-                        .foregroundStyle(HPTheme.textPrimary)
-                    Text("Live spot prices from Binance")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(HPTheme.textSecondary)
-                }
-                Spacer()
-                HStack(spacing: 6) {
-                    StatusDot(state: model.marketConnectionState, size: 8)
-                    Text(model.marketConnectionState.label)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(HPTheme.textSecondary)
-                }
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(HPTheme.surface.opacity(0.82))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(HPTheme.line, lineWidth: 0.8)
-                    }
-            )
-            .padding(.horizontal, 16)
-            .padding(.top, 14)
+            marketHeader
 
             HStack {
                 Text("3 Core Markets")
                 Spacer()
                 Text("24h Change")
             }
-            .font(.system(size: 12, weight: .medium))
+            .font(.system(size: 14, weight: .medium))
             .foregroundStyle(HPTheme.textSecondary)
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
-            .padding(.bottom, 9)
+            .padding(.horizontal, 26)
+            .padding(.top, 28)
+            .padding(.bottom, 12)
 
             if model.marketQuotes.isEmpty {
                 VStack(spacing: 10) {
@@ -180,16 +153,35 @@ struct ExpandedMarketContent: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 9) {
+                    LazyVStack(spacing: 11) {
                         ForEach(model.marketQuotes) { quote in
                             ExpandedMarketCard(quote: quote)
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 15.5)
                     .padding(.bottom, 12)
                 }
             }
         }
+        .padding(.top, 19)
+    }
+
+    private var marketHeader: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Markets")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(HPTheme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Spot prices from Binance")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(HPTheme.textSecondary)
+            }
+
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 27.5)
     }
 }
 
@@ -197,46 +189,76 @@ private struct ExpandedMarketCard: View {
     let quote: MarketQuote
 
     var body: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 11) {
-                AssetIcon(coin: quote.symbol, size: 40)
+        VStack(spacing: 0) {
+            HStack(spacing: 13) {
+                AssetIcon(coin: quote.symbol, size: 44)
+                    .offset(x: -2)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(quote.pair)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(HPTheme.textPrimary)
                     Text("Binance spot")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(HPTheme.textSecondary)
                 }
+                .offset(x: -2)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 3) {
                     Text(HPFormat.marketPrice(quote.price))
-                        .font(.system(size: 17, weight: .bold).monospacedDigit())
+                        .font(.system(size: 18, weight: .bold).monospacedDigit())
                         .foregroundStyle(HPTheme.textPrimary)
                         .contentTransition(.numericText())
                     Text(HPFormat.signedPercent(quote.changePercent24h))
-                        .font(.system(size: 13, weight: .bold).monospacedDigit())
+                        .font(.system(size: 15, weight: .bold).monospacedDigit())
                         .foregroundStyle(quote.isUp ? HPTheme.positive : HPTheme.negative)
                 }
             }
+            .frame(minHeight: 44)
+
+            Rectangle()
+                .fill(HPTheme.line)
+                .frame(height: 1)
+                .padding(.top, 16)
 
             HStack(alignment: .top) {
-                MetricView(label: "Open", value: HPFormat.marketPrice(quote.openPrice24h))
+                MarketCardMetric(label: "Open", value: HPFormat.marketPrice(quote.openPrice24h))
                 Spacer()
-                MetricView(label: "Low", value: HPFormat.marketPrice(quote.lowPrice24h))
+                MarketCardMetric(label: "Low", value: HPFormat.marketPrice(quote.lowPrice24h))
                 Spacer()
-                MetricView(label: "High", value: HPFormat.marketPrice(quote.highPrice24h), alignment: .trailing)
+                MarketCardMetric(label: "High", value: HPFormat.marketPrice(quote.highPrice24h), alignment: .trailing)
             }
+            .padding(.top, 13)
 
         }
-        .padding(14)
+        .padding(.horizontal, 18)
+        .padding(.top, 14)
+        .padding(.bottom, 13)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(HPTheme.surface.opacity(0.66))
+                .fill(HPTheme.surface.opacity(0.62))
                 .overlay {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(HPTheme.lineStrong, lineWidth: 0.8)
+                        .strokeBorder(HPTheme.lineStrong.opacity(0.70), lineWidth: 0.8)
                 }
+        }
+    }
+}
+
+private struct MarketCardMetric: View {
+    let label: String
+    let value: String
+    var alignment: HorizontalAlignment = .leading
+
+    var body: some View {
+        VStack(alignment: alignment, spacing: 5) {
+            Text(label)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(HPTheme.textSecondary)
+            Text(value)
+                .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                .foregroundStyle(HPTheme.textPrimary)
+                .lineLimit(1)
+                .contentTransition(.numericText())
         }
     }
 }

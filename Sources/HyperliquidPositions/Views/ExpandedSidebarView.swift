@@ -72,12 +72,11 @@ struct ExpandedSidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            trafficLights
-
             header
-                .padding(.horizontal, 25)
-                .padding(.top, 14)
-                .padding(.bottom, 24)
+                .padding(.leading, 22.5)
+                .padding(.trailing, 18)
+                .padding(.top, 22)
+                .padding(.bottom, 14)
 
             if model.activeSection == .positions {
                 positionsContent
@@ -100,27 +99,13 @@ struct ExpandedSidebarView: View {
         }
     }
 
-    private var trafficLights: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(Color(red: 1.0, green: 0.28, blue: 0.31))
-                .frame(width: 10, height: 10)
-            Circle()
-                .fill(Color(red: 1.0, green: 0.68, blue: 0.20))
-                .frame(width: 10, height: 10)
-            Circle()
-                .fill(Color(red: 0.12, green: 0.72, blue: 0.29))
-                .frame(width: 10, height: 10)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityHidden(true)
-    }
-
     private var header: some View {
-        HStack(spacing: 16) {
-            HyperliquidMark(size: 46)
+        HStack(spacing: 17) {
+            HyperliquidMark(
+                size: 49,
+                foreground: HPTheme.textPrimary,
+                background: HPTheme.surfaceRaised.opacity(0.76)
+            )
 
             Button {
                 NSPasteboard.general.clearContents()
@@ -137,8 +122,6 @@ struct ExpandedSidebarView: View {
             .buttonStyle(.plain)
             .help("Copy wallet address")
             .accessibilityLabel("Copy wallet address")
-
-            StatusDot(state: model.activeConnectionState, size: 8)
 
             if model.isShowingDemoData {
                 Text("DEMO")
@@ -470,7 +453,12 @@ struct ExpandedSidebarView: View {
         }
         .buttonStyle(ExpandedFooterButtonStyle())
         .foregroundStyle(HPTheme.textSecondary)
-        .frame(height: HPLayout.expandedFooterHeight)
+        .padding(.horizontal, model.activeSection == .market ? 10 : 0)
+        .frame(
+            height: model.activeSection == .market
+                ? HPLayout.expandedMarketFooterHeight
+                : HPLayout.expandedFooterHeight
+        )
         .background(HPTheme.canvas.opacity(0.98))
         .overlay(alignment: .top) {
             Rectangle().fill(HPTheme.line).frame(height: 1)
@@ -568,9 +556,9 @@ private struct ExpandedHeaderIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(hovered ? HPTheme.textPrimary : HPTheme.textSecondary)
-                .frame(width: 34, height: 34)
+                .frame(width: 38, height: 38)
                 .background {
                     Circle()
                         .fill(hovered ? HPTheme.surfaceRaised.opacity(0.72) : Color.clear)

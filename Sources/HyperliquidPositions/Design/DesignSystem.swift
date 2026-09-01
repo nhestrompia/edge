@@ -14,6 +14,10 @@ enum HPTheme {
     static let negative = Color(red: 1.0, green: 0.28, blue: 0.31)
     static let negativeMuted = Color(red: 0.34, green: 0.08, blue: 0.09)
     static let warning = Color(red: 1.0, green: 0.68, blue: 0.20)
+    static let onboardingCanvas = Color(red: 0.028, green: 0.034, blue: 0.042)
+    static let onboardingField = Color(red: 0.025, green: 0.030, blue: 0.038)
+    static let onboardingControl = Color(red: 0.075, green: 0.082, blue: 0.095)
+    static let onboardingAccent = Color(red: 0.48, green: 0.60, blue: 0.90)
 
     static let panelShadow = Color.black.opacity(0.44)
 }
@@ -26,8 +30,11 @@ enum HPLayout {
     static let marketInspectorHeight: CGFloat = 230
     static let expandedWidth: CGFloat = 480
     static let expandedMaxHeight: CGFloat = 820
+    static let expandedMarketWidth: CGFloat = 497.5
+    static let expandedMarketMaxHeight: CGFloat = 790.5
     static let expandedFooterHeight: CGFloat = 44
-    static let onboardingSize = CGSize(width: 568, height: 496)
+    static let expandedMarketFooterHeight: CGFloat = 64
+    static let onboardingSize = CGSize(width: 654, height: 578)
     static let positionRowHeight: CGFloat = 106
     static let railTopPadding: CGFloat = 18
     static let railFooterHeight: CGFloat = 62

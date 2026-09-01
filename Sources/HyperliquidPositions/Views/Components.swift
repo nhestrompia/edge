@@ -2,14 +2,16 @@ import SwiftUI
 
 struct HyperliquidMark: View {
     var size: CGFloat = 44
+    var foreground: Color = HPTheme.positive
+    var background: Color = HPTheme.positive.opacity(0.09)
 
     var body: some View {
         ZStack {
             Circle()
-                .fill(HPTheme.positive.opacity(0.09))
+                .fill(background)
 
             HyperliquidGlyphShape()
-                .fill(HPTheme.positive)
+                .fill(foreground)
                 .frame(width: size * 0.62, height: size * 0.42)
         }
         .frame(width: size, height: size)

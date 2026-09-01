@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct OnboardingView: View {
@@ -5,6 +6,7 @@ struct OnboardingView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var walletAddress: String
     @State private var closeHovered = false
+    @State private var pasteHovered = false
     @FocusState private var addressFocused: Bool
     private let initialWalletAddress: String
     let onDragChanged: (CGSize) -> Void
@@ -28,30 +30,31 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 0) {
             topBar
 
-            Spacer(minLength: 10)
+            Spacer(minLength: 8)
 
             Text("Track your\nHyperliquid positions")
-                .font(.system(size: 36, weight: .bold))
-                .tracking(-1.0)
+                .font(.system(size: 40, weight: .bold))
+                .tracking(-1.1)
+                .lineSpacing(4)
                 .foregroundStyle(HPTheme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text("Keep every open perpetual position\nvisible at the edge of your Mac.")
-                .font(.system(size: 16, weight: .regular))
+                .font(.system(size: 17, weight: .regular))
                 .foregroundStyle(HPTheme.textSecondary)
                 .lineSpacing(6)
-                .padding(.top, 14)
+                .padding(.top, 16)
 
             walletForm
-                .padding(.top, 34)
+                .padding(.top, 38)
 
             Spacer(minLength: 0)
 
             trustSection
         }
-        .padding(.horizontal, 32)
-        .padding(.top, 24)
-        .padding(.bottom, 24)
+        .padding(.horizontal, 36)
+        .padding(.top, 28)
+        .padding(.bottom, 40)
         .frame(width: HPLayout.onboardingSize.width, height: HPLayout.onboardingSize.height)
         .background(onboardingSurface)
         .onAppear {
@@ -69,9 +72,9 @@ struct OnboardingView: View {
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 19, weight: .medium))
+                    .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(HPTheme.textSecondary)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 40, height: 40)
                     .background(Circle().fill(closeHovered ? HPTheme.surfacePressed.opacity(0.84) : .clear))
                     .overlay {
                         Circle()
@@ -79,12 +82,13 @@ struct OnboardingView: View {
                     }
                     .contentShape(Circle())
             }
+            .offset(y: -5)
             .buttonStyle(.plain)
             .onHover { closeHovered = $0 }
             .help("Close setup")
             .accessibilityLabel("Close setup")
         }
-        .frame(height: 52)
+        .frame(height: 48)
         .contentShape(Rectangle())
         .simultaneousGesture(
             DragGesture(minimumDistance: 2)
@@ -96,48 +100,37 @@ struct OnboardingView: View {
 
     private var walletForm: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("PUBLIC WALLET ADDRESS")
-                .font(.system(size: 11, weight: .bold))
-                .tracking(1.1)
+            Text("Wallet address")
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(HPTheme.textSecondary)
 
-            HStack(spacing: 13) {
-                Image(systemName: "clipboard")
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundStyle(HPTheme.positive)
-
+            HStack(spacing: 0) {
                 TextField("0x...", text: $walletAddress)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 17, weight: .medium).monospaced())
+                    .font(.system(size: 18, weight: .medium).monospaced())
                     .foregroundStyle(HPTheme.textPrimary)
                     .focused($addressFocused)
                     .onSubmit { submit() }
 
-                if !walletAddress.isEmpty {
-                    Button {
-                        walletAddress = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(HPTheme.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Clear wallet address")
-                }
+                Spacer(minLength: 12)
+
+                pasteButton
             }
-            .padding(.horizontal, 17)
-            .frame(height: 48)
+            .padding(.leading, 17)
+            .padding(.trailing, 12)
+            .frame(height: 62)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(HPTheme.surface.opacity(0.55))
+                    .fill(HPTheme.onboardingField)
                     .overlay {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .stroke(
-                                addressFocused ? HPTheme.positive.opacity(0.86) : HPTheme.lineStrong,
-                                lineWidth: addressFocused ? 1.25 : 0.8
+                                addressFocused ? HPTheme.textSecondary.opacity(0.88) : HPTheme.lineStrong,
+                                lineWidth: addressFocused ? 1.1 : 0.8
                             )
                     }
             )
-            .padding(.top, 11)
+            .padding(.top, 12)
 
             if let error = model.onboardingError {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
@@ -160,36 +153,53 @@ struct OnboardingView: View {
                         Image(systemName: "arrow.right")
                     }
                 }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(HPTheme.positive.opacity(walletAddress.isEmpty ? 0.88 : 1))
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(HPTheme.textPrimary)
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .frame(height: 56)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    HPTheme.positive.opacity(walletAddress.isEmpty ? 0.08 : 0.12),
-                                    HPTheme.positiveMuted.opacity(walletAddress.isEmpty ? 0.40 : 0.52)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .fill(HPTheme.onboardingControl)
                         .overlay {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(HPTheme.positive.opacity(0.14), lineWidth: 0.8)
+                                .stroke(HPTheme.line, lineWidth: 0.8)
                         }
                 )
             }
             .buttonStyle(.plain)
-            .disabled(model.isSubmittingWallet || walletAddress.isEmpty)
-            .padding(.top, 12)
+            .disabled(model.isSubmittingWallet)
+            .padding(.top, 16)
         }
     }
 
+    private var pasteButton: some View {
+        Button(action: pasteWalletAddress) {
+            HStack(spacing: 10) {
+                Image(systemName: "clipboard")
+                    .font(.system(size: 19, weight: .regular))
+
+                Text("Paste")
+            }
+            .font(.system(size: 16, weight: .medium))
+            .foregroundStyle(HPTheme.textPrimary)
+            .frame(width: 92, height: 36)
+            .background {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(pasteHovered ? HPTheme.surfacePressed.opacity(0.72) : HPTheme.onboardingControl.opacity(0.48))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(pasteHovered ? HPTheme.lineStrong : HPTheme.line, lineWidth: 0.8)
+                    }
+            }
+        }
+        .buttonStyle(.plain)
+        .onHover { pasteHovered = $0 }
+        .help("Paste wallet address")
+        .accessibilityLabel("Paste wallet address")
+    }
+
     private var trustSection: some View {
-        let columnWidth = (HPLayout.onboardingSize.width - 64 - 1) / 2
+        let columnWidth = (HPLayout.onboardingSize.width - 72 - 1) / 2
 
         return VStack(spacing: 0) {
             Rectangle()
@@ -201,7 +211,7 @@ struct OnboardingView: View {
                     Text("We ")
                         .foregroundStyle(HPTheme.textSecondary)
                     + Text("never")
-                        .foregroundStyle(HPTheme.positive)
+                        .foregroundStyle(HPTheme.onboardingAccent)
                     + Text(" store your data.")
                         .foregroundStyle(HPTheme.textSecondary)
                 }
@@ -213,34 +223,23 @@ struct OnboardingView: View {
 
                 trustPoint(icon: "shield") {
                     Text("Read-only.")
-                        .foregroundStyle(HPTheme.positive)
+                        .foregroundStyle(HPTheme.onboardingAccent)
                     + Text(" Nothing gets signed.")
                         .foregroundStyle(HPTheme.textSecondary)
                 }
                 .padding(.leading, 8)
                 .frame(width: columnWidth, alignment: .leading)
             }
-            .padding(.top, 14)
-            .frame(height: 39, alignment: .bottom)
+            .padding(.top, 24)
+            .frame(height: 49, alignment: .bottom)
         }
     }
 
     private var onboardingSurface: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(HPTheme.canvas.opacity(0.985))
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(HPTheme.onboardingCanvas)
             .overlay {
-                ZStack {
-                    RadialGradient(
-                        colors: [HPTheme.positive.opacity(0.055), .clear],
-                        center: .bottomLeading,
-                        startRadius: 0,
-                        endRadius: 320
-                    )
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .strokeBorder(HPTheme.lineStrong.opacity(0.9), lineWidth: 0.8)
             }
             .shadow(color: HPTheme.panelShadow.opacity(0.48), radius: 18, x: -2, y: 8)
@@ -263,7 +262,14 @@ struct OnboardingView: View {
     }
 
     private func submit() {
-        guard !model.isSubmittingWallet else { return }
+        guard !model.isSubmittingWallet,
+              !walletAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         Task { await model.trackWallet(walletAddress) }
+    }
+
+    private func pasteWalletAddress() {
+        guard let pastedAddress = NSPasteboard.general.string(forType: .string) else { return }
+        walletAddress = pastedAddress.trimmingCharacters(in: .whitespacesAndNewlines)
+        addressFocused = true
     }
 }
