@@ -8,6 +8,7 @@ enum PanelMode: Equatable {
     case notch
     case rail
     case expanded
+    case settings
 }
 
 enum ConnectionState: Equatable {
@@ -67,6 +68,7 @@ final class AppModel: ObservableObject {
     private var isPointerInside = false
     private var onboardingReturnMode: PanelMode?
     private var onboardingReturnSection: SidebarSection?
+    private var settingsReturnMode: PanelMode = .expanded
     private var isChangingWallet = false
     private var preferencesCancellable: AnyCancellable?
     private let isDemoMode: Bool
@@ -229,6 +231,8 @@ final class AppModel: ObservableObject {
             .rail
         case .rail, .expanded:
             panelMode
+        case .settings:
+            .expanded
         }
     }
 
@@ -244,7 +248,7 @@ final class AppModel: ObservableObject {
 
     func pointerExited() {
         isPointerInside = false
-        guard panelMode != .onboarding, !isCaptureMode else { return }
+        guard panelMode != .onboarding, panelMode != .settings, !isCaptureMode else { return }
         collapseTask?.cancel()
         collapseTask = Task { [weak self] in
             try? await Task.sleep(for: HPMotion.autoHideDelay)
@@ -318,6 +322,27 @@ final class AppModel: ObservableObject {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
             panelMode = .rail
+        }
+    }
+
+    func showSettings() {
+        guard panelMode != .onboarding, panelMode != .settings else { return }
+        collapseTask?.cancel()
+        settingsReturnMode = panelMode
+        hoveredPositionID = nil
+        hoveredMarketSymbol = nil
+        isPanelVisible = true
+        animate(panelMode == .notch ? HPMotion.expand : HPMotion.panel) {
+            panelMode = .settings
+        }
+    }
+
+    func closeSettings() {
+        guard panelMode == .settings else { return }
+        let restoreMode = settingsReturnMode
+        settingsReturnMode = .expanded
+        animate(HPMotion.panel) {
+            panelMode = restoreMode
         }
     }
 

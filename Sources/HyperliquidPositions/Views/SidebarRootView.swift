@@ -20,13 +20,16 @@ struct SidebarRootView: View {
                     .id(model.onboardingSession)
 
                 case .notch:
-                    NotchView(connectionState: model.activeConnectionState)
+                    NotchView(
+                        connectionState: model.activeConnectionState,
+                        edge: model.preferences.sidebarEdge
+                    )
                         .frame(width: HPLayout.notchSize.width, height: HPLayout.notchSize.height)
 
                 case .rail:
                     railLayer(in: geometry.size)
 
-                case .expanded:
+                case .expanded, .settings:
                     ExpandedSidebarView(
                         onDragChanged: onDragChanged,
                         onDragEnded: onDragEnded
@@ -38,6 +41,8 @@ struct SidebarRootView: View {
         .onExitCommand {
             if model.panelMode == .onboarding {
                 onCloseOnboarding()
+            } else if model.panelMode == .settings {
+                model.closeSettings()
             } else if model.panelMode == .expanded {
                 model.showRail()
             } else {

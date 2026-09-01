@@ -6,6 +6,10 @@ struct RailView: View {
     let onDragChanged: (CGSize) -> Void
     let onDragEnded: () -> Void
 
+    private var isRightEdge: Bool {
+        model.preferences.sidebarEdge == .right
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             dragHandle
@@ -54,26 +58,24 @@ struct RailView: View {
             .frame(height: HPLayout.railFooterHeight)
         }
         .background {
-            UnevenRoundedRectangle(
-                topLeadingRadius: 32,
-                bottomLeadingRadius: 32,
-                bottomTrailingRadius: 3,
-                topTrailingRadius: 3,
-                style: .continuous
-            )
-            .fill(HPTheme.canvas.opacity(0.98))
-            .overlay {
-                UnevenRoundedRectangle(
-                    topLeadingRadius: 32,
-                    bottomLeadingRadius: 32,
-                    bottomTrailingRadius: 3,
-                    topTrailingRadius: 3,
-                    style: .continuous
-                )
-                .strokeBorder(HPTheme.line, lineWidth: 0.8)
-            }
+            railShape
+                .fill(HPTheme.canvas.opacity(0.98))
+                .overlay {
+                    railShape
+                    .strokeBorder(HPTheme.line, lineWidth: 0.8)
+                }
         }
         .contentShape(Rectangle())
+    }
+
+    private var railShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: isRightEdge ? 32 : 3,
+            bottomLeadingRadius: isRightEdge ? 32 : 3,
+            bottomTrailingRadius: isRightEdge ? 3 : 32,
+            topTrailingRadius: isRightEdge ? 3 : 32,
+            style: .continuous
+        )
     }
 
     @ViewBuilder

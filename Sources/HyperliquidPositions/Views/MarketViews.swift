@@ -117,7 +117,7 @@ struct MarketHoverCardView: View {
                     InspectorBubbleShape(pointsRight: pointsRight)
                         .stroke(HPTheme.lineStrong, lineWidth: 0.7)
                 }
-                .shadow(color: HPTheme.panelShadow, radius: 22, x: -3, y: 11)
+                .shadow(color: HPTheme.panelShadow, radius: 22, x: pointsRight ? -3 : 3, y: 11)
         }
         .transaction { transaction in
             transaction.animation = nil

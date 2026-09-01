@@ -72,18 +72,22 @@ struct ExpandedSidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .padding(.leading, 22.5)
-                .padding(.trailing, 18)
-                .padding(.top, 22)
-                .padding(.bottom, 14)
-
-            if model.activeSection == .positions {
-                positionsContent
-                    .transition(.opacity)
+            if model.panelMode == .settings {
+                SettingsPageView(onBack: model.closeSettings)
             } else {
-                ExpandedMarketContent()
-                    .transition(.opacity)
+                header
+                    .padding(.leading, 22.5)
+                    .padding(.trailing, 18)
+                    .padding(.top, 22)
+                    .padding(.bottom, 14)
+
+                if model.activeSection == .positions {
+                    positionsContent
+                        .transition(.opacity)
+                } else {
+                    ExpandedMarketContent()
+                        .transition(.opacity)
+                }
             }
 
             footer
@@ -95,7 +99,12 @@ struct ExpandedSidebarView: View {
                     RoundedRectangle(cornerRadius: 25, style: .continuous)
                         .strokeBorder(HPTheme.lineStrong, lineWidth: 0.8)
                 }
-                .shadow(color: HPTheme.panelShadow, radius: 24, x: -4, y: 12)
+                .shadow(
+                    color: HPTheme.panelShadow,
+                    radius: 24,
+                    x: model.preferences.sidebarEdge == .right ? -4 : 4,
+                    y: 12
+                )
         }
     }
 
@@ -203,14 +212,9 @@ struct ExpandedSidebarView: View {
             .padding(.top, 14)
 
             HStack {
-                HStack(spacing: 10) {
-                    Text(positionCountLabel)
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundStyle(HPTheme.textPrimary)
-                    Circle()
-                        .fill(HPTheme.positive)
-                        .frame(width: 7, height: 7)
-                }
+                Text(positionCountLabel)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(HPTheme.textPrimary)
                 Spacer()
                 sortMenu
             }
@@ -401,13 +405,6 @@ struct ExpandedSidebarView: View {
                 }
             }
         } label: {
-            Color.clear
-                .frame(width: 112, height: 30)
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .frame(width: 140, height: 20, alignment: .trailing)
-        .overlay(alignment: .trailing) {
             HStack(spacing: 7) {
                 Text("Sort:")
                     .foregroundStyle(HPTheme.textSecondary)
@@ -418,8 +415,12 @@ struct ExpandedSidebarView: View {
                     .foregroundStyle(HPTheme.textSecondary)
             }
             .font(.system(size: 14, weight: .medium))
-            .allowsHitTesting(false)
+            .frame(width: 140, height: 30, alignment: .trailing)
+            .contentShape(Rectangle())
         }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .frame(width: 140, height: 30, alignment: .trailing)
         .help("Sort positions")
         .accessibilityLabel("Sort positions")
         .accessibilityValue(positionSort.label)
@@ -428,25 +429,35 @@ struct ExpandedSidebarView: View {
     private var footer: some View {
         HStack(spacing: 0) {
             Button {
-                model.switchSection(to: .positions)
+                selectSection(.positions)
             } label: {
-                footerIcon("briefcase", active: model.activeSection == .positions)
+                footerIcon("briefcase", active: model.panelMode != .settings && model.activeSection == .positions)
             }
             .help("Positions")
             .accessibilityLabel("Positions")
-            .accessibilityAddTraits(model.activeSection == .positions ? .isSelected : [])
+            .accessibilityAddTraits(
+                model.panelMode != .settings && model.activeSection == .positions ? .isSelected : []
+            )
 
             Button {
-                model.switchSection(to: .market)
+                selectSection(.market)
             } label: {
-                footerIcon("chart.line.uptrend.xyaxis", active: model.activeSection == .market)
+                footerIcon("chart.line.uptrend.xyaxis", active: model.panelMode != .settings && model.activeSection == .market)
             }
             .help("Markets")
             .accessibilityLabel("Markets")
-            .accessibilityAddTraits(model.activeSection == .market ? .isSelected : [])
+            .accessibilityAddTraits(
+                model.panelMode != .settings && model.activeSection == .market ? .isSelected : []
+            )
 
-            SettingsLink {
-                footerIcon("gearshape", active: false)
+            Button {
+                if model.panelMode == .settings {
+                    model.closeSettings()
+                } else {
+                    model.showSettings()
+                }
+            } label: {
+                footerIcon("gearshape", active: model.panelMode == .settings)
             }
             .help("Settings")
             .accessibilityLabel("Settings")
@@ -454,31 +465,25 @@ struct ExpandedSidebarView: View {
         .buttonStyle(ExpandedFooterButtonStyle())
         .foregroundStyle(HPTheme.textSecondary)
         .padding(.horizontal, model.activeSection == .market ? 10 : 0)
-        .frame(
-            height: model.activeSection == .market
-                ? HPLayout.expandedMarketFooterHeight
-                : HPLayout.expandedFooterHeight
-        )
+        .frame(height: HPLayout.expandedFooterHeight)
         .background(HPTheme.canvas.opacity(0.98))
         .overlay(alignment: .top) {
             Rectangle().fill(HPTheme.line).frame(height: 1)
         }
     }
 
-    private func footerIcon(_ systemName: String, active: Bool) -> some View {
-        ZStack(alignment: .topTrailing) {
-            Image(systemName: systemName)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
-
-            if active {
-                Circle()
-                    .fill(HPTheme.positive)
-                    .frame(width: 6, height: 6)
-                    .offset(x: 7, y: -5)
-            }
+    private func selectSection(_ section: SidebarSection) {
+        if model.panelMode == .settings {
+            model.closeSettings()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        model.switchSection(to: section)
+    }
+
+    private func footerIcon(_ systemName: String, active: Bool) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 20, weight: .medium))
+            .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var filteredPositions: [Position] {

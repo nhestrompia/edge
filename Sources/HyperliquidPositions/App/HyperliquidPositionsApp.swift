@@ -29,9 +29,10 @@ struct HyperliquidPositionsApp: App {
                 model.hidePositions()
             }
 
-            SettingsLink {
-                Text("Settings…")
+            Button("Settings…") {
+                model.showSettings()
             }
+            .keyboardShortcut(",")
 
             Divider()
 
@@ -42,9 +43,5 @@ struct HyperliquidPositionsApp: App {
         }
         .menuBarExtraStyle(.menu)
 
-        Settings {
-            AppSettingsView()
-                .environmentObject(model)
-        }
     }
 }

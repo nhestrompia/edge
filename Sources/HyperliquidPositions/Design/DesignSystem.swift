@@ -32,8 +32,7 @@ enum HPLayout {
     static let expandedMaxHeight: CGFloat = 820
     static let expandedMarketWidth: CGFloat = 497.5
     static let expandedMarketMaxHeight: CGFloat = 790.5
-    static let expandedFooterHeight: CGFloat = 44
-    static let expandedMarketFooterHeight: CGFloat = 64
+    static let expandedFooterHeight: CGFloat = 64
     static let onboardingSize = CGSize(width: 654, height: 578)
     static let positionRowHeight: CGFloat = 106
     static let railTopPadding: CGFloat = 18
