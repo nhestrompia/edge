@@ -14,14 +14,18 @@ struct SettingsPageView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 0) {
                 header
+                    .padding(.bottom, 18)
 
                 accountSection
+                sectionDivider
                 behaviorSection
+                sectionDivider
                 displaySection
 
                 trustNote
+                    .padding(.top, 20)
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 22)
@@ -72,7 +76,7 @@ struct SettingsPageView: View {
     }
 
     private var accountSection: some View {
-        settingsGroup(title: "Account") {
+        settingsSection(title: "Account") {
             HStack(spacing: 12) {
                 HyperliquidMark(
                     size: 32,
@@ -105,19 +109,12 @@ struct SettingsPageView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 13)
 
-            Divider()
-                .overlay(HPTheme.line)
-
-            Label("Read-only access · no keys or signatures", systemImage: "lock.shield")
-                .font(.system(size: 11.5, weight: .medium))
-                .foregroundStyle(HPTheme.textSecondary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 11)
+         
         }
     }
 
     private var behaviorSection: some View {
-        settingsGroup(title: "Behavior") {
+        settingsSection(title: "Behavior") {
             settingsToggle("Launch at login", isOn: $model.preferences.launchAtLogin)
 
             Divider()
@@ -133,17 +130,17 @@ struct SettingsPageView: View {
     }
 
     private var displaySection: some View {
-        settingsGroup(title: "Display") {
-            settingPickerRow(
-                title: "PnL shown as",
-                accessibilityLabel: "PnL display",
-                selection: $model.preferences.pnlDisplayMode,
-                options: PnLDisplayMode.allCases,
-                titleForOption: { $0.title }
-            )
+        settingsSection(title: "Display") {
+            // settingPickerRow(
+            //     title: "PnL shown as",
+            //     accessibilityLabel: "PnL display",
+            //     selection: $model.preferences.pnlDisplayMode,
+            //     options: PnLDisplayMode.allCases,
+            //     titleForOption: { $0.title }
+            // )
 
-            Divider()
-                .overlay(HPTheme.line)
+            // Divider()
+            //     .overlay(HPTheme.line)
 
             settingPickerRow(
                 title: "Screen edge",
@@ -157,21 +154,18 @@ struct SettingsPageView: View {
 
     private var trustNote: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark.shield")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(HPTheme.positive)
-                .frame(width: 20)
-
-            Text("edge only uses a public wallet address. It never requests private keys, signatures, or trading access.")
-                .font(.system(size: 12, weight: .regular))
-                .foregroundStyle(HPTheme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+          
         }
-        .padding(.horizontal, 3)
-        .padding(.top, 1)
+       
     }
 
-    private func settingsGroup<Content: View>(
+    private var sectionDivider: some View {
+        Divider()
+            .overlay(HPTheme.line)
+            .padding(.vertical, 14)
+    }
+
+    private func settingsSection<Content: View>(
         title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
@@ -180,19 +174,11 @@ struct SettingsPageView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(HPTheme.textSecondary)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .padding(.top, 2)
+                .padding(.bottom, 10)
 
             content()
         }
-        .background {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(HPTheme.surface.opacity(0.92))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(HPTheme.line, lineWidth: 0.8)
-                }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func settingsToggle(

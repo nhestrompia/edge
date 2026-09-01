@@ -92,6 +92,7 @@ struct ExpandedSidebarView: View {
 
             footer
         }
+        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
         .background {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(HPTheme.canvas.opacity(0.985))
@@ -365,10 +366,13 @@ struct ExpandedSidebarView: View {
             }
             .font(.system(size: 14, weight: .medium))
             .foregroundStyle(positionFilter == .all ? HPTheme.textPrimary : HPTheme.positive)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Capsule(style: .continuous))
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .frame(width: 100, height: 36)
+        .contentShape(Capsule(style: .continuous))
         .background {
             Capsule(style: .continuous)
                 .fill(
