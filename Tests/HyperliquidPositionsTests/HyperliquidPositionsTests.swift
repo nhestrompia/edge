@@ -26,9 +26,12 @@ final class HyperliquidPositionsTests: XCTestCase {
         XCTAssertEqual(HPLayout.railItemCount(positions: 0, markets: 0), 1)
     }
 
-    func testExpandedPanelFrameIsStableAcrossSections() {
+    func testExpandedPanelFrameConstantsIncludeMarketBoardWidth() {
         XCTAssertEqual(HPLayout.expandedPanelWidth, max(HPLayout.expandedWidth, HPLayout.expandedMarketWidth))
         XCTAssertEqual(HPLayout.expandedPanelMaxHeight, max(HPLayout.expandedMaxHeight, HPLayout.expandedMarketMaxHeight))
+        XCTAssertEqual(HPLayout.expandedMarketWidth, 548)
+        XCTAssertEqual(HPLayout.expandedMarketContentHeight, 584)
+        XCTAssertEqual(HPLayout.expandedMarketHeight, 733)
     }
 
     func testWalletAddressValidation() {

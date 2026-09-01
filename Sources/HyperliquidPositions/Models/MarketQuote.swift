@@ -25,26 +25,26 @@ extension MarketQuote {
     static let demo: [MarketQuote] = [
         MarketQuote(
             symbol: "BTC",
-            price: 109_333,
-            openPrice24h: 106_820,
-            highPrice24h: 110_180,
-            lowPrice24h: 105_940,
+            price: 78_797,
+            openPrice24h: 77_999,
+            highPrice24h: 79_250,
+            lowPrice24h: 77_675,
             updatedAt: .now
         ),
         MarketQuote(
             symbol: "ETH",
-            price: 2_646.76,
-            openPrice24h: 2_589.10,
-            highPrice24h: 2_681.40,
-            lowPrice24h: 2_552.30,
+            price: 2_471.6,
+            openPrice24h: 2_432,
+            highPrice24h: 2_490,
+            lowPrice24h: 2_429,
             updatedAt: .now
         ),
         MarketQuote(
             symbol: "SOL",
-            price: 186.42,
-            openPrice24h: 187.81,
-            highPrice24h: 191.20,
-            lowPrice24h: 183.04,
+            price: 103.80,
+            openPrice24h: 102.49,
+            highPrice24h: 105.00,
+            lowPrice24h: 102.18,
             updatedAt: .now
         )
     ]

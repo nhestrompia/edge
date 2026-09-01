@@ -51,14 +51,6 @@ enum ExpandedPositionSort: String, CaseIterable, Identifiable {
         }
     }
 
-    var shortLabel: String {
-        switch self {
-        case .pnlHighToLow: "PnL high"
-        case .pnlLowToHigh: "PnL low"
-        case .asset: "Asset"
-        case .leverage: "Leverage high"
-        }
-    }
 }
 
 struct ExpandedSidebarView: View {
@@ -70,6 +62,7 @@ struct ExpandedSidebarView: View {
     @State private var isFilterMenuPresented = false
     @State private var positionSearchText = ""
     @State private var positionSort: ExpandedPositionSort = .pnlHighToLow
+    @State private var isSortMenuPresented = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -413,40 +406,55 @@ struct ExpandedSidebarView: View {
     }
 
     private var sortMenu: some View {
-        Menu {
-            ForEach(ExpandedPositionSort.allCases) { sort in
-                Button {
-                    positionSort = sort
-                } label: {
-                    HStack {
-                        Text(sort.label)
-                        Spacer()
-                        if positionSort == sort {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
+        Button {
+            isSortMenuPresented.toggle()
         } label: {
             HStack(spacing: 7) {
                 Text("Sort:")
                     .foregroundStyle(HPTheme.textSecondary)
-                Text(positionSort.shortLabel)
+                Text(positionSort.label)
                     .foregroundStyle(HPTheme.positive)
+                    .lineLimit(1)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(HPTheme.textSecondary)
             }
             .font(.system(size: 14, weight: .medium))
-            .frame(width: 140, height: 30, alignment: .trailing)
+            .frame(width: 230, height: 30, alignment: .trailing)
             .contentShape(Rectangle())
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .frame(width: 140, height: 30, alignment: .trailing)
+        .buttonStyle(.plain)
+        .frame(width: 230, height: 30, alignment: .trailing)
         .help("Sort positions")
         .accessibilityLabel("Sort positions")
         .accessibilityValue(positionSort.label)
+        .popover(isPresented: $isSortMenuPresented, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(ExpandedPositionSort.allCases) { sort in
+                    Button {
+                        positionSort = sort
+                        isSortMenuPresented = false
+                    } label: {
+                        HStack(spacing: 10) {
+                            Text(sort.label)
+                            Spacer(minLength: 12)
+                            if positionSort == sort {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(HPTheme.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(height: 30)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(8)
+            .frame(width: 210)
+            .background(HPTheme.canvas)
+        }
     }
 
     private var footer: some View {

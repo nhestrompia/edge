@@ -331,23 +331,29 @@ final class EdgePanelCoordinator: NSObject {
     private func targetSize(in visibleFrame: CGRect) -> CGSize {
         switch model.panelMode {
         case .onboarding:
-            HPLayout.onboardingSize
+            return HPLayout.onboardingSize
         case .notch:
-            HPLayout.notchSize
+            return HPLayout.notchSize
         case .rail:
-            CGSize(
+            return CGSize(
                 width: model.hasActiveInspector
                     ? HPLayout.railWidth + HPLayout.inspectorWidth
                     : HPLayout.railWidth,
                 height: railHeight(in: visibleFrame)
             )
         case .expanded:
-            CGSize(
+            if model.activeSection == .market {
+                return CGSize(
+                    width: HPLayout.expandedMarketWidth,
+                    height: min(HPLayout.expandedMarketHeight, visibleFrame.height - 20)
+                )
+            }
+            return CGSize(
                 width: HPLayout.expandedPanelWidth,
                 height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
             )
         case .settings:
-            CGSize(
+            return CGSize(
                 width: HPLayout.expandedPanelWidth,
                 height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
             )

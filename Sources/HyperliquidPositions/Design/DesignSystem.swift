@@ -30,11 +30,12 @@ enum HPLayout {
     static let marketInspectorHeight: CGFloat = 230
     static let expandedWidth: CGFloat = 480
     static let expandedMaxHeight: CGFloat = 820
-    static let expandedMarketWidth: CGFloat = 497.5
+    static let expandedMarketWidth: CGFloat = 548
+    static let expandedMarketContentHeight: CGFloat = 584
+    static let expandedMarketHeight: CGFloat = 733
     static let expandedMarketMaxHeight: CGFloat = 790.5
-    // Keep the outer panel frame stable while switching expanded sections.
-    // Section-specific content can still use its own internal layout, but the
-    // window itself should not move under the pointer.
+    // Keep the regular expanded panel frame stable for positions and settings.
+    // The compact market board has a dedicated reference-sized frame.
     static let expandedPanelWidth: CGFloat = max(expandedWidth, expandedMarketWidth)
     static let expandedPanelMaxHeight: CGFloat = max(expandedMaxHeight, expandedMarketMaxHeight)
     static let expandedFooterHeight: CGFloat = 64
