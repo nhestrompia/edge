@@ -67,6 +67,7 @@ struct ExpandedSidebarView: View {
     let onDragEnded: () -> Void
     @FocusState private var isSearchFieldFocused: Bool
     @State private var positionFilter: ExpandedPositionFilter = .all
+    @State private var isFilterMenuPresented = false
     @State private var positionSearchText = ""
     @State private var positionSort: ExpandedPositionSort = .pnlHighToLow
 
@@ -341,36 +342,27 @@ struct ExpandedSidebarView: View {
     }
 
     private var filterMenu: some View {
-        Menu {
-            ForEach(ExpandedPositionFilter.allCases) { filter in
-                Button {
-                    positionFilter = filter
-                } label: {
-                    HStack {
-                        Text(filter.label)
-                        Spacer()
-                        if positionFilter == filter {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
+        Button {
+            isFilterMenuPresented.toggle()
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 15, weight: .medium))
-                Text(positionFilter == .all ? "Filter" : positionFilter.label)
-                    .lineLimit(1)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .bold))
+            ZStack {
+                Color.clear
+
+                HStack(spacing: 10) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 15, weight: .medium))
+                    Text(positionFilter == .all ? "Filter" : positionFilter.label)
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(positionFilter == .all ? HPTheme.textPrimary : HPTheme.positive)
             }
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(positionFilter == .all ? HPTheme.textPrimary : HPTheme.positive)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: 100, height: 36)
             .contentShape(Capsule(style: .continuous))
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
         .frame(width: 100, height: 36)
         .contentShape(Capsule(style: .continuous))
         .background {
@@ -391,6 +383,33 @@ struct ExpandedSidebarView: View {
         .help("Filter positions")
         .accessibilityLabel("Filter positions")
         .accessibilityValue(positionFilter.label)
+        .popover(isPresented: $isFilterMenuPresented, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(ExpandedPositionFilter.allCases) { filter in
+                    Button {
+                        positionFilter = filter
+                        isFilterMenuPresented = false
+                    } label: {
+                        HStack(spacing: 10) {
+                            Text(filter.label)
+                            Spacer(minLength: 12)
+                            if positionFilter == filter {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(HPTheme.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(height: 30)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(8)
+            .frame(width: 180)
+            .background(HPTheme.canvas)
+        }
     }
 
     private var sortMenu: some View {

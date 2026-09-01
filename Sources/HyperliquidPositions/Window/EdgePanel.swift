@@ -343,20 +343,13 @@ final class EdgePanelCoordinator: NSObject {
             )
         case .expanded:
             CGSize(
-                width: model.activeSection == .market
-                    ? HPLayout.expandedMarketWidth
-                    : HPLayout.expandedWidth,
-                height: min(
-                    model.activeSection == .market
-                        ? HPLayout.expandedMarketMaxHeight
-                        : HPLayout.expandedMaxHeight,
-                    visibleFrame.height - 20
-                )
+                width: HPLayout.expandedPanelWidth,
+                height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
             )
         case .settings:
             CGSize(
-                width: HPLayout.expandedWidth,
-                height: min(HPLayout.expandedMaxHeight, visibleFrame.height - 20)
+                width: HPLayout.expandedPanelWidth,
+                height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
             )
         }
     }

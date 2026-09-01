@@ -32,6 +32,11 @@ enum HPLayout {
     static let expandedMaxHeight: CGFloat = 820
     static let expandedMarketWidth: CGFloat = 497.5
     static let expandedMarketMaxHeight: CGFloat = 790.5
+    // Keep the outer panel frame stable while switching expanded sections.
+    // Section-specific content can still use its own internal layout, but the
+    // window itself should not move under the pointer.
+    static let expandedPanelWidth: CGFloat = max(expandedWidth, expandedMarketWidth)
+    static let expandedPanelMaxHeight: CGFloat = max(expandedMaxHeight, expandedMarketMaxHeight)
     static let expandedFooterHeight: CGFloat = 64
     static let onboardingSize = CGSize(width: 654, height: 578)
     static let positionRowHeight: CGFloat = 106
