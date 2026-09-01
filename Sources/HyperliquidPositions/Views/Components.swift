@@ -19,82 +19,6 @@ struct HyperliquidMark: View {
     }
 }
 
-struct TokenMark: View {
-    let coin: String
-    var size: CGFloat = 44
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(backgroundColor)
-
-            glyph
-                .frame(width: size * 0.62, height: size * 0.62)
-        }
-        .frame(width: size, height: size)
-        .overlay {
-            Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 0.8)
-        }
-        .accessibilityLabel("\(coin) position")
-    }
-
-    @ViewBuilder
-    private var glyph: some View {
-        switch coin.uppercased() {
-        case "BTC":
-            BitcoinGlyph()
-        case "ETH":
-            GeometryReader { geometry in
-                let width = geometry.size.width
-                let height = geometry.size.height
-                Path { path in
-                    path.move(to: CGPoint(x: width / 2, y: 0))
-                    path.addLine(to: CGPoint(x: width * 0.83, y: height * 0.52))
-                    path.addLine(to: CGPoint(x: width / 2, y: height * 0.68))
-                    path.addLine(to: CGPoint(x: width * 0.17, y: height * 0.52))
-                    path.closeSubpath()
-                }
-                .fill(Color.white)
-
-                Path { path in
-                    path.move(to: CGPoint(x: width / 2, y: height * 0.74))
-                    path.addLine(to: CGPoint(x: width * 0.81, y: height * 0.58))
-                    path.addLine(to: CGPoint(x: width / 2, y: height))
-                    path.addLine(to: CGPoint(x: width * 0.19, y: height * 0.58))
-                    path.closeSubpath()
-                }
-                .fill(Color.white.opacity(0.84))
-            }
-        case "SOL":
-            VStack(spacing: 3) {
-                ForEach(0..<3, id: \.self) { index in
-                    Capsule()
-                        .fill(index == 1 ? Color.cyan : Color.purple)
-                        .frame(height: 4)
-                        .offset(x: index == 1 ? -3 : 3)
-                }
-            }
-        case "HYPE":
-            HyperliquidGlyphShape()
-                .fill(HPTheme.positive)
-        default:
-            Text(String(coin.prefix(1)))
-                .font(.system(size: size * 0.48, weight: .black, design: .rounded))
-                .foregroundStyle(Color.white)
-        }
-    }
-
-    private var backgroundColor: Color {
-        switch coin.uppercased() {
-        case "BTC": Color(red: 0.97, green: 0.48, blue: 0.08)
-        case "ETH": Color(red: 0.39, green: 0.35, blue: 0.91)
-        case "HYPE": HPTheme.canvas
-        case "SOL": HPTheme.canvas
-        default: Color(red: 0.22, green: 0.29, blue: 0.30)
-        }
-    }
-}
-
 enum AssetIconSource {
     static let coinGeckoImageBaseURL = URL(string: "https://coin-images.coingecko.com/coins/images/")!
     static let hyperliquidBaseURL = URL(string: "https://app.hyperliquid.xyz/coins/")!
@@ -109,7 +33,7 @@ enum AssetIconSource {
     /// Exchange responses contain asset symbols, but not image URLs. Use exact
     /// CoinGecko IDs for the core markets so a symbol cannot resolve to the
     /// wrong token. Other Hyperliquid symbols use Hyperliquid's official mark
-    /// endpoint; invalid symbols stay on the local fallback mark.
+    /// endpoint; invalid symbols do not produce an icon URL.
     static func url(for coin: String) -> URL? {
         let asset = coin.trimmingCharacters(in: .whitespacesAndNewlines)
         let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_:@#"))
@@ -142,17 +66,44 @@ struct AssetIcon: View {
                             .scaledToFit()
                             .frame(width: size, height: size)
                     case .empty, .failure:
-                        TokenMark(coin: coin, size: size)
+                        AssetInitialMark(coin: coin, size: size)
                     @unknown default:
-                        TokenMark(coin: coin, size: size)
+                        AssetInitialMark(coin: coin, size: size)
                     }
                 }
             } else {
-                TokenMark(coin: coin, size: size)
+                AssetInitialMark(coin: coin, size: size)
             }
         }
         .frame(width: size, height: size)
         .accessibilityLabel("\(coin) asset")
+    }
+}
+
+private struct AssetInitialMark: View {
+    let coin: String
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(HPTheme.surfaceRaised)
+
+            Text(initial)
+                .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
+                .foregroundStyle(HPTheme.textPrimary)
+        }
+        .frame(width: size, height: size)
+        .overlay {
+            Circle()
+                .strokeBorder(HPTheme.line, lineWidth: 0.8)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var initial: String {
+        let trimmedCoin = coin.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedCoin.first.map(String.init) ?? "?"
     }
 }
 
@@ -175,13 +126,11 @@ struct SourceMark: View {
                             .scaledToFit()
                             .padding(size * 0.13)
                     case .empty, .failure:
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: size * 0.62, weight: .bold))
-                            .foregroundStyle(HPTheme.warning)
+                        Color.clear
+                            .frame(width: size, height: size)
                     @unknown default:
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: size * 0.62, weight: .bold))
-                            .foregroundStyle(HPTheme.warning)
+                        Color.clear
+                            .frame(width: size, height: size)
                     }
                 }
             case .hyperliquid:
@@ -254,39 +203,6 @@ private struct HyperliquidGlyphShape: Shape {
             control2: CGPoint(x: x(0.03), y: y(0.73))
         )
         path.closeSubpath()
-        return path
-    }
-}
-
-private struct BitcoinGlyph: View {
-    var body: some View {
-        ZStack {
-            HStack(spacing: 3) {
-                Capsule().fill(Color.white)
-                Capsule().fill(Color.white)
-            }
-            .frame(width: 7, height: 28)
-
-            BitcoinBShape()
-                .fill(Color.white, style: FillStyle(eoFill: true))
-        }
-    }
-}
-
-private struct BitcoinBShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let outer = CGRect(x: rect.width * 0.20, y: rect.height * 0.14, width: rect.width * 0.63, height: rect.height * 0.72)
-        path.addRoundedRect(in: outer, cornerSize: CGSize(width: rect.width * 0.22, height: rect.height * 0.22))
-        path.addRect(CGRect(x: rect.width * 0.20, y: rect.height * 0.14, width: rect.width * 0.22, height: rect.height * 0.72))
-        path.addRoundedRect(
-            in: CGRect(x: rect.width * 0.42, y: rect.height * 0.27, width: rect.width * 0.22, height: rect.height * 0.16),
-            cornerSize: CGSize(width: rect.width * 0.08, height: rect.height * 0.08)
-        )
-        path.addRoundedRect(
-            in: CGRect(x: rect.width * 0.42, y: rect.height * 0.56, width: rect.width * 0.26, height: rect.height * 0.17),
-            cornerSize: CGSize(width: rect.width * 0.08, height: rect.height * 0.08)
-        )
         return path
     }
 }

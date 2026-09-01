@@ -41,5 +41,5 @@ The bundle is created at `dist/edge.app` and ad-hoc signed for local use. A Deve
 - `wss://api.hyperliquid.xyz/ws` streams `allMids` and `clearinghouseState` updates.
 - `GET https://data-api.binance.vision/api/v3/ticker/24hr` seeds the BTC/USDT, ETH/USDT, and SOL/USDT market view.
 - `wss://data-stream.binance.vision` streams one-second mini-ticker updates for those three public markets.
-- BTC, ETH, and SOL use exact CoinGecko asset image URLs; other Hyperliquid symbols use official marks from `https://app.hyperliquid.xyz/coins/{symbol}.svg`, with the existing authored marks as the loading and failure fallback. Neither the Binance ticker payload nor the Hyperliquid position payload includes an icon URL.
+- BTC, ETH, and SOL use exact CoinGecko asset image URLs; other Hyperliquid symbols use official marks from `https://app.hyperliquid.xyz/coins/{symbol}.svg`. Asset marks render from those image URLs, with a neutral first-letter mark only while an image is loading or unavailable. Neither the Binance ticker payload nor the Hyperliquid position payload includes an icon URL.
 - The UI consumes stable `Position` and `MarketQuote` models rather than exchange response types.

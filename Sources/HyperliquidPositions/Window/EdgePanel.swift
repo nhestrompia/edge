@@ -355,7 +355,7 @@ final class EdgePanelCoordinator: NSObject {
         case .settings:
             return CGSize(
                 width: HPLayout.expandedPanelWidth,
-                height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
+                height: min(HPLayout.settingsHeight, visibleFrame.height - 20)
             )
         }
     }

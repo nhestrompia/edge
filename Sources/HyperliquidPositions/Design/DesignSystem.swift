@@ -30,6 +30,7 @@ enum HPLayout {
     static let marketInspectorHeight: CGFloat = 230
     static let expandedWidth: CGFloat = 480
     static let expandedMaxHeight: CGFloat = 820
+    static let settingsHeight: CGFloat = 620
     static let expandedMarketWidth: CGFloat = 548
     static let expandedMarketContentHeight: CGFloat = 584
     static let expandedMarketHeight: CGFloat = 733
@@ -39,7 +40,9 @@ enum HPLayout {
     static let expandedPanelWidth: CGFloat = max(expandedWidth, expandedMarketWidth)
     static let expandedPanelMaxHeight: CGFloat = max(expandedMaxHeight, expandedMarketMaxHeight)
     static let expandedFooterHeight: CGFloat = 64
-    static let onboardingSize = CGSize(width: 654, height: 578)
+    static let onboardingDesignSize = CGSize(width: 654, height: 578)
+    static let onboardingScale: CGFloat = 0.70
+    static let onboardingSize = CGSize(width: 458, height: 405)
     static let positionRowHeight: CGFloat = 106
     static let railTopPadding: CGFloat = 18
     static let railFooterHeight: CGFloat = 62

@@ -27,6 +27,16 @@ struct OnboardingView: View {
     }
 
     var body: some View {
+        onboardingContent
+            .scaleEffect(HPLayout.onboardingScale, anchor: .topLeading)
+            .frame(
+                width: HPLayout.onboardingSize.width,
+                height: HPLayout.onboardingSize.height,
+                alignment: .topLeading
+            )
+    }
+
+    private var onboardingContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             topBar
 
@@ -55,7 +65,7 @@ struct OnboardingView: View {
         .padding(.horizontal, 36)
         .padding(.top, 28)
         .padding(.bottom, 40)
-        .frame(width: HPLayout.onboardingSize.width, height: HPLayout.onboardingSize.height)
+        .frame(width: HPLayout.onboardingDesignSize.width, height: HPLayout.onboardingDesignSize.height)
         .background(onboardingSurface)
         .onAppear {
             walletAddress = initialWalletAddress
@@ -199,7 +209,7 @@ struct OnboardingView: View {
     }
 
     private var trustSection: some View {
-        let columnWidth = (HPLayout.onboardingSize.width - 72 - 1) / 2
+        let columnWidth = (HPLayout.onboardingDesignSize.width - 72 - 1) / 2
 
         return VStack(spacing: 0) {
             Rectangle()
