@@ -363,6 +363,13 @@ struct LiquidationBar: View {
                 Capsule()
                     .fill(barColor)
                     .frame(width: max(height, geometry.size.width * progress))
+
+                if distance != nil {
+                    Circle()
+                        .fill(barColor)
+                        .frame(width: markerDiameter, height: markerDiameter)
+                        .offset(x: markerOffset(in: geometry.size.width))
+                }
             }
         }
         .frame(height: height)
@@ -372,7 +379,16 @@ struct LiquidationBar: View {
 
     private var progress: Double {
         guard let distance else { return 0 }
-        return min(max(distance / 35, 0.04), 1)
+        return min(max(distance / 75, 0.04), 1)
+    }
+
+    private var markerDiameter: CGFloat {
+        max(height * 1.8, 8)
+    }
+
+    private func markerOffset(in width: CGFloat) -> CGFloat {
+        let availableWidth = max(0, width - markerDiameter)
+        return min(max(availableWidth * progress - markerDiameter / 2, 0), availableWidth)
     }
 
     private var barColor: Color {

@@ -72,9 +72,12 @@ struct ExpandedSidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            trafficLights
+
             header
-                .padding(.horizontal, 18)
-                .padding(.top, 16)
+                .padding(.horizontal, 25)
+                .padding(.top, 14)
+                .padding(.bottom, 24)
 
             if model.activeSection == .positions {
                 positionsContent
@@ -97,8 +100,26 @@ struct ExpandedSidebarView: View {
         }
     }
 
+    private var trafficLights: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(Color(red: 1.0, green: 0.28, blue: 0.31))
+                .frame(width: 10, height: 10)
+            Circle()
+                .fill(Color(red: 1.0, green: 0.68, blue: 0.20))
+                .frame(width: 10, height: 10)
+            Circle()
+                .fill(Color(red: 0.12, green: 0.72, blue: 0.29))
+                .frame(width: 10, height: 10)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityHidden(true)
+    }
+
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             HyperliquidMark(size: 46)
 
             Button {
@@ -107,9 +128,9 @@ struct ExpandedSidebarView: View {
             } label: {
                 HStack(spacing: 5) {
                     Text(model.abbreviatedAddress)
-                        .font(.system(size: 16, weight: .bold).monospaced())
+                        .font(.system(size: 14, weight: .medium).monospaced())
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                 }
                 .foregroundStyle(HPTheme.textPrimary)
             }
@@ -117,22 +138,26 @@ struct ExpandedSidebarView: View {
             .help("Copy wallet address")
             .accessibilityLabel("Copy wallet address")
 
-            Spacer()
+            StatusDot(state: model.activeConnectionState, size: 8)
+
             if model.isShowingDemoData {
-                Text("DEMO DATA")
+                Text("DEMO")
                     .font(.system(size: 8, weight: .bold))
-                    .tracking(0.6)
+                    .tracking(0.7)
                     .foregroundStyle(HPTheme.warning)
             }
-            HStack(spacing: 4) {
-                PressableIconButton(
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                ExpandedHeaderIconButton(
                     systemName: "wallet.pass",
                     label: "Change wallet"
                 ) {
                     model.changeWallet()
                 }
 
-                PressableIconButton(
+                ExpandedHeaderIconButton(
                     systemName: "rectangle.leftthird.inset.filled",
                     label: "Collapse"
                 ) {
@@ -149,62 +174,66 @@ struct ExpandedSidebarView: View {
     }
 
     private var summary: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Total Unrealized PnL")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(HPTheme.textSecondary)
-                Text(HPFormat.signedCurrency(model.totalUnrealizedPnl))
-                .font(.system(size: 24, weight: .bold).monospacedDigit())
-                .foregroundStyle(model.totalUnrealizedPnl >= 0 ? HPTheme.positive : HPTheme.negative)
-                .contentTransition(.numericText())
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 8) {
-                Text("Position Return")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(HPTheme.textSecondary)
-                Text(HPFormat.signedPercent(model.combinedPnlPercent))
-                    .font(.system(size: 18, weight: .bold).monospacedDigit())
-                    .foregroundStyle(model.combinedPnlPercent >= 0 ? HPTheme.positive : HPTheme.negative)
-            }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(HPTheme.surface.opacity(0.82))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(HPTheme.line, lineWidth: 0.8)
+        VStack(spacing: 0) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("TOTAL UNREALIZED PNL")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(HPTheme.textSecondary)
+                    Text(HPFormat.signedCurrency(model.totalUnrealizedPnl))
+                        .font(.system(size: 24, weight: .bold).monospacedDigit())
+                        .foregroundStyle(model.totalUnrealizedPnl >= 0 ? HPTheme.positive : HPTheme.negative)
+                        .contentTransition(.numericText())
                 }
-        )
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 8) {
+                    Text("POSITION RETURN")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(HPTheme.textSecondary)
+                    Text(HPFormat.signedPercent(model.combinedPnlPercent))
+                        .font(.system(size: 24, weight: .bold).monospacedDigit())
+                        .foregroundStyle(model.combinedPnlPercent >= 0 ? HPTheme.positive : HPTheme.negative)
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 13)
+
+            Rectangle()
+                .fill(HPTheme.line)
+                .frame(height: 1)
+                .padding(.horizontal, 26)
+        }
     }
 
     private var positionsContent: some View {
         VStack(spacing: 0) {
             summary
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 17) {
                 searchField
                 filterMenu
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 11)
+            .padding(.leading, 30)
+            .padding(.trailing, 27)
+            .padding(.top, 14)
 
             HStack {
-                Text(positionCountLabel)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(HPTheme.textSecondary)
+                HStack(spacing: 10) {
+                    Text(positionCountLabel)
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundStyle(HPTheme.textPrimary)
+                    Circle()
+                        .fill(HPTheme.positive)
+                        .frame(width: 7, height: 7)
+                }
                 Spacer()
                 sortMenu
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 12)
-            .padding(.bottom, 9)
+            .padding(.horizontal, 26)
+            .padding(.top, 19)
+            .padding(.bottom, 8)
 
             if model.positions.isEmpty {
                 emptyState
@@ -212,13 +241,13 @@ struct ExpandedSidebarView: View {
                 noMatchesState
             } else {
                 ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: 5) {
                         ForEach(filteredPositions) { position in
                             ExpandedPositionCard(position: position)
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
+                    .padding(.horizontal, 22)
+                    .padding(.bottom, 16)
                 }
             }
         }
@@ -277,12 +306,12 @@ struct ExpandedSidebarView: View {
     private var searchField: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(HPTheme.textSecondary)
 
             TextField("Search assets", text: $positionSearchText)
                 .textFieldStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundStyle(HPTheme.textPrimary)
                 .focused($isSearchFieldFocused)
                 .accessibilityLabel("Search positions")
@@ -294,7 +323,7 @@ struct ExpandedSidebarView: View {
                     isSearchFieldFocused = true
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(HPTheme.textSecondary)
                 }
                 .buttonStyle(.plain)
@@ -302,21 +331,21 @@ struct ExpandedSidebarView: View {
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(.horizontal, 11)
+        .padding(.horizontal, 14)
         .frame(maxWidth: .infinity)
-        .frame(height: 34)
+        .frame(height: 36)
         .background(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .fill(HPTheme.surfaceRaised.opacity(0.8))
+            Capsule(style: .continuous)
+                .fill(HPTheme.surface.opacity(0.58))
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            Capsule(style: .continuous)
                 .strokeBorder(
-                    isSearchFieldFocused ? HPTheme.positive.opacity(0.82) : HPTheme.line,
-                    lineWidth: isSearchFieldFocused ? 1.2 : 0.8
+                    isSearchFieldFocused ? HPTheme.positive : HPTheme.positive.opacity(0.72),
+                    lineWidth: isSearchFieldFocused ? 1.3 : 0.8
                 )
         }
-        .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .contentShape(Capsule(style: .continuous))
         .onTapGesture {
             isSearchFieldFocused = true
         }
@@ -339,34 +368,35 @@ struct ExpandedSidebarView: View {
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.system(size: 12, weight: .semibold))
+            HStack(spacing: 10) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 15, weight: .medium))
                 Text(positionFilter == .all ? "Filter" : positionFilter.label)
                     .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .bold))
             }
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(positionFilter == .all ? HPTheme.textSecondary : HPTheme.positive)
-            .padding(.horizontal, 10)
-            .frame(height: 34)
-            .background(
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(
-                        positionFilter == .all
-                            ? HPTheme.surfaceRaised.opacity(0.8)
-                            : HPTheme.positiveMuted.opacity(0.72)
-                    )
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(
-                        positionFilter == .all ? HPTheme.line : HPTheme.positive.opacity(0.42),
-                        lineWidth: 0.8
-                    )
-            }
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(positionFilter == .all ? HPTheme.textPrimary : HPTheme.positive)
         }
         .menuStyle(.borderlessButton)
-        .fixedSize()
+        .menuIndicator(.hidden)
+        .frame(width: 100, height: 36)
+        .background {
+            Capsule(style: .continuous)
+                .fill(
+                    positionFilter == .all
+                        ? HPTheme.surface.opacity(0.58)
+                        : HPTheme.positiveMuted.opacity(0.72)
+                )
+        }
+        .overlay {
+            Capsule(style: .continuous)
+                .strokeBorder(
+                    positionFilter == .all ? HPTheme.line : HPTheme.positive.opacity(0.42),
+                    lineWidth: 0.8
+                )
+        }
         .help("Filter positions")
         .accessibilityLabel("Filter positions")
         .accessibilityValue(positionFilter.label)
@@ -388,12 +418,25 @@ struct ExpandedSidebarView: View {
                 }
             }
         } label: {
-            Text("Sort: \(positionSort.shortLabel)")
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(HPTheme.textSecondary)
+            Color.clear
+                .frame(width: 112, height: 30)
         }
         .menuStyle(.borderlessButton)
-        .fixedSize()
+        .menuIndicator(.hidden)
+        .frame(width: 140, height: 20, alignment: .trailing)
+        .overlay(alignment: .trailing) {
+            HStack(spacing: 7) {
+                Text("Sort:")
+                    .foregroundStyle(HPTheme.textSecondary)
+                Text(positionSort.shortLabel)
+                    .foregroundStyle(HPTheme.positive)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(HPTheme.textSecondary)
+            }
+            .font(.system(size: 14, weight: .medium))
+            .allowsHitTesting(false)
+        }
         .help("Sort positions")
         .accessibilityLabel("Sort positions")
         .accessibilityValue(positionSort.label)
@@ -427,17 +470,27 @@ struct ExpandedSidebarView: View {
         }
         .buttonStyle(ExpandedFooterButtonStyle())
         .foregroundStyle(HPTheme.textSecondary)
-        .frame(height: 57)
+        .frame(height: HPLayout.expandedFooterHeight)
+        .background(HPTheme.canvas.opacity(0.98))
         .overlay(alignment: .top) {
             Rectangle().fill(HPTheme.line).frame(height: 1)
         }
     }
 
     private func footerIcon(_ systemName: String, active: Bool) -> some View {
-        Image(systemName: systemName)
-            .font(.system(size: 17, weight: .medium))
-            .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: systemName)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(active ? HPTheme.positive : HPTheme.textSecondary)
+
+            if active {
+                Circle()
+                    .fill(HPTheme.positive)
+                    .frame(width: 6, height: 6)
+                    .offset(x: 7, y: -5)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var filteredPositions: [Position] {
@@ -505,88 +558,151 @@ private struct ExpandedFooterButtonStyle: ButtonStyle {
     }
 }
 
+private struct ExpandedHeaderIconButton: View {
+    let systemName: String
+    let label: String
+    let action: () -> Void
+
+    @State private var hovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(hovered ? HPTheme.textPrimary : HPTheme.textSecondary)
+                .frame(width: 34, height: 34)
+                .background {
+                    Circle()
+                        .fill(hovered ? HPTheme.surfaceRaised.opacity(0.72) : Color.clear)
+                        .overlay {
+                            Circle()
+                                .strokeBorder(hovered ? HPTheme.lineStrong : HPTheme.line, lineWidth: 0.8)
+                        }
+                }
+        }
+        .buttonStyle(.plain)
+        .onHover { hovered = $0 }
+        .animation(HPMotion.control, value: hovered)
+        .help(label)
+        .accessibilityLabel(label)
+    }
+}
+
 private struct ExpandedPositionCard: View {
     @EnvironmentObject private var model: AppModel
     let position: Position
     @State private var hovered = false
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
             HStack(spacing: 10) {
                 AssetIcon(coin: position.coin, size: 38)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(position.coin)-PERP")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(HPTheme.textPrimary)
+                    HStack(spacing: 8) {
+                        Text("\(position.coin)-PERP")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(HPTheme.textPrimary)
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(HPTheme.textSecondary)
+                    }
                     SideBadge(position: position)
                 }
-                Spacer()
+
+                Spacer(minLength: 8)
+
                 VStack(alignment: .trailing, spacing: 3) {
                     Text(HPFormat.signedCurrency(position.unrealizedPnl))
-                    .font(.system(size: 16, weight: .bold).monospacedDigit())
-                    .contentTransition(.numericText())
+                        .font(.system(size: 17, weight: .bold).monospacedDigit())
+                        .contentTransition(.numericText())
                     Text(HPFormat.signedPercent(position.pnlPercent))
-                        .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                        .font(.system(size: 14, weight: .semibold).monospacedDigit())
                 }
                 .foregroundStyle(position.isProfitable ? HPTheme.positive : HPTheme.negative)
-            }
 
-            HStack(alignment: .top) {
+                Button {
+                    model.openHyperliquid(for: position.coin)
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(HPTheme.textSecondary)
+                        .frame(width: 24, height: 44)
+                }
+                .buttonStyle(.plain)
+                .help("Open \(position.coin) on Hyperliquid")
+                .accessibilityLabel("Open \(position.coin) on Hyperliquid")
+            }
+            .frame(height: 44)
+
+            HStack(spacing: 0) {
                 MetricView(label: "Size", value: HPFormat.currency(position.notionalValue))
-                Spacer()
+                    .frame(width: 154, alignment: .leading)
                 MetricView(label: "Entry", value: HPFormat.price(position.entryPrice))
-                Spacer()
-                MetricView(label: "Mark", value: HPFormat.price(position.markPrice), alignment: .trailing)
+                    .frame(width: 139, alignment: .leading)
+                MetricView(label: "Mark", value: HPFormat.price(position.markPrice))
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(.top, 13)
 
-            HStack(alignment: .bottom, spacing: 16) {
+            Rectangle()
+                .fill(HPTheme.line)
+                .frame(height: 1)
+                .padding(.top, 13)
+
+            HStack(alignment: .bottom, spacing: 0) {
                 MetricView(label: "Liq. Price", value: HPFormat.price(position.liquidationPrice))
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Liq. Distance")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(HPTheme.textSecondary)
-                        Spacer()
-                        Text(position.liquidationDistance.map { HPFormat.percent($0) } ?? "—")
-                            .font(.system(size: 12, weight: .bold).monospacedDigit())
-                            .foregroundStyle(position.isLiquidationRiskElevated ? HPTheme.negative : HPTheme.positive)
-                    }
-                    LiquidationBar(distance: position.liquidationDistance)
-                }
-                .frame(maxWidth: .infinity)
-            }
+                    .frame(width: 84, alignment: .leading)
 
-            Button {
-                model.openHyperliquid(for: position.coin)
-            } label: {
-                HStack(spacing: 6) {
-                    Text("Open on Hyperliquid")
-                    Image(systemName: "arrow.up.right")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Distance")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(HPTheme.textSecondary)
+                    Text(HPFormat.liquidationDistance(position.liquidationDistance))
+                        .font(.system(size: 14, weight: .medium).monospacedDigit())
+                        .foregroundStyle(liquidationColor)
+                        .lineLimit(1)
                 }
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(HPTheme.textPrimary)
+                .frame(width: 102, alignment: .leading)
+
+                VStack(alignment: .trailing, spacing: 5) {
+                    LiquidationBar(distance: position.liquidationDistance, height: 4)
+                    Text(liquidationLabel)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(liquidationColor)
+                }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(hovered ? HPTheme.surfacePressed : HPTheme.surfaceRaised)
-                )
             }
-            .buttonStyle(.plain)
+            .padding(.top, 10)
         }
-        .padding(13)
+        .padding(.horizontal, 15)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(hovered ? HPTheme.surface.opacity(0.86) : HPTheme.surface.opacity(0.62))
                 .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(
-                            hovered ? HPTheme.positive.opacity(0.42) : HPTheme.lineStrong,
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(
+                            hovered ? HPTheme.positive.opacity(0.42) : HPTheme.line,
                             lineWidth: 0.8
                         )
                 }
         }
         .onHover { hovered = $0 }
         .animation(HPMotion.control, value: hovered)
+    }
+
+    private var liquidationLabel: String {
+        guard let distance = position.liquidationDistance else { return "UNAVAILABLE" }
+        if distance < 12 { return "HIGH RISK" }
+        if distance < 18 { return "MEDIUM RISK" }
+        return "SAFE"
+    }
+
+    private var liquidationColor: Color {
+        guard let distance = position.liquidationDistance else { return HPTheme.textSecondary }
+        if distance < 12 { return HPTheme.negative }
+        if distance < 18 { return HPTheme.warning }
+        return HPTheme.positive
     }
 }

@@ -12,10 +12,12 @@ struct SidebarRootView: View {
                 switch model.panelMode {
                 case .onboarding:
                     OnboardingView(
+                        initialWalletAddress: model.preferences.walletAddress,
                         onDragChanged: onDragChanged,
                         onDragEnded: onDragEnded,
                         onClose: onCloseOnboarding
                     )
+                    .id(model.onboardingSession)
 
                 case .notch:
                     NotchView(connectionState: model.activeConnectionState)

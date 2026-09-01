@@ -4,7 +4,9 @@
 
 ## Platform
 
-macOS
+adaptive
+
+<!-- The shipped surface is native macOS SwiftUI/AppKit; adaptive is the closest supported platform value in this artifact schema. -->
 
 ## Stack
 

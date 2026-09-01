@@ -147,7 +147,7 @@ The palette is restrained: dark graphite owns almost the entire surface, while m
 
 ## Layout
 
-The interface is anchored to one screen edge with a consistent 7px overlap. The notch is `30×118`; the compact rail is 112px wide; its height is driven by position count and capped at 630px. The inspector adds 386px toward the desktop while preserving the rail's anchor. The expanded board is 438px wide and caps at 710px or the visible screen height minus 20px.
+The interface is anchored to one screen edge with a consistent 7px overlap. The notch is `30×118`; the compact rail is 112px wide; its height is driven by position count and capped at 630px. The inspector adds 386px toward the desktop while preserving the rail's anchor. The expanded board is 480px wide and caps at 820px or the visible screen height minus 20px, with a compact 44px footer.
 
 Spacing follows a compact 4/8/12/16/22/28 rhythm. Metric groups are tight; state changes receive more separation. Position stacks scroll inside the panel rather than growing past the display. Left-edge mode mirrors horizontal growth while preserving the same state geometry.
 

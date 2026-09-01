@@ -51,6 +51,7 @@ final class AppModel: ObservableObject {
     private(set) var marketLastUpdated: Date?
     @Published private(set) var onboardingError: String?
     @Published private(set) var isSubmittingWallet = false
+    @Published private(set) var onboardingSession = 0
 
     var preferences: AppPreferences
 
@@ -64,6 +65,9 @@ final class AppModel: ObservableObject {
     private var marketStreamTask: Task<Void, Never>?
     private var collapseTask: Task<Void, Never>?
     private var isPointerInside = false
+    private var onboardingReturnMode: PanelMode?
+    private var onboardingReturnSection: SidebarSection?
+    private var isChangingWallet = false
     private var preferencesCancellable: AnyCancellable?
     private let isDemoMode: Bool
     private let isCaptureMode: Bool
@@ -163,6 +167,9 @@ final class AppModel: ObservableObject {
             positions = fetchedPositions
             lastUpdated = .now
             connectionState = .live
+            onboardingReturnMode = nil
+            onboardingReturnSection = nil
+            isChangingWallet = false
             animate(HPMotion.panel) {
                 panelMode = preferences.autoHide ? .notch : .rail
             }
@@ -174,15 +181,17 @@ final class AppModel: ObservableObject {
     }
 
     func changeWallet() {
+        let hasExistingWallet = WalletAddressValidator.isValid(preferences.walletAddress)
+        onboardingReturnMode = hasExistingWallet ? onboardingRestoreMode : nil
+        onboardingReturnSection = hasExistingWallet ? activeSection : nil
+        isChangingWallet = hasExistingWallet
         stopMonitoring()
         isPanelVisible = true
-        preferences.walletAddress = ""
-        positions = []
-        marketQuotes = []
         hoveredPositionID = nil
         hoveredMarketSymbol = nil
         activeSection = .positions
         onboardingError = nil
+        onboardingSession += 1
         animate(HPMotion.panel) {
             panelMode = .onboarding
         }
@@ -190,7 +199,37 @@ final class AppModel: ObservableObject {
 
     func dismissOnboarding() {
         guard panelMode == .onboarding else { return }
+
+        if isChangingWallet {
+            let restoreMode = onboardingReturnMode ?? .rail
+            let restoreSection = onboardingReturnSection ?? .positions
+            onboardingReturnMode = nil
+            onboardingReturnSection = nil
+            isChangingWallet = false
+            onboardingError = nil
+            isPanelVisible = true
+            activeSection = restoreSection
+            beginMonitoring()
+            animate(HPMotion.panel) {
+                panelMode = restoreMode
+            }
+            return
+        }
+
         isPanelVisible = false
+    }
+
+    private var onboardingRestoreMode: PanelMode {
+        switch panelMode {
+        case .notch:
+            // Closing a wallet edit should leave a usable sidebar, even when
+            // the edit was opened from Settings while the rail was collapsed.
+            .rail
+        case .onboarding:
+            .rail
+        case .rail, .expanded:
+            panelMode
+        }
     }
 
     func pointerEntered() {

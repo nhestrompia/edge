@@ -24,8 +24,10 @@ enum HPLayout {
     static let inspectorWidth: CGFloat = 386
     static let inspectorHeight: CGFloat = 302
     static let marketInspectorHeight: CGFloat = 230
-    static let expandedWidth: CGFloat = 438
-    static let onboardingSize = CGSize(width: 486, height: 626)
+    static let expandedWidth: CGFloat = 480
+    static let expandedMaxHeight: CGFloat = 820
+    static let expandedFooterHeight: CGFloat = 44
+    static let onboardingSize = CGSize(width: 568, height: 496)
     static let positionRowHeight: CGFloat = 106
     static let railTopPadding: CGFloat = 18
     static let railFooterHeight: CGFloat = 62
@@ -89,6 +91,19 @@ enum HPFormat {
 
     static func percent(_ value: Double, fractionDigits: Int = 1) -> String {
         "\(String(format: "%.*f", fractionDigits, value))%"
+    }
+
+    static func liquidationDistance(_ value: Double?) -> String {
+        guard let value else { return "—" }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.usesGroupingSeparator = true
+        formatter.minimumFractionDigits = value.rounded() == value ? 0 : 1
+        formatter.maximumFractionDigits = 1
+        let formatted = formatter.string(from: NSNumber(value: value)) ?? "0"
+        return "\(formatted)% away"
     }
 
     static func price(_ value: Double?) -> String {
