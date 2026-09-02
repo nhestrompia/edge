@@ -27,6 +27,17 @@ private final class PanelContentView: NSView {
         addTrackingArea(trackingArea)
         self.trackingArea = trackingArea
         super.updateTrackingAreas()
+        refreshPointerState()
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        refreshPointerState()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        refreshPointerState()
     }
 
     override func mouseEntered(with event: NSEvent) {
@@ -42,6 +53,14 @@ private final class PanelContentView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         setPointerInside(true)
+    }
+
+    func refreshPointerState() {
+        guard let window, window.isVisible, !bounds.isEmpty else { return }
+        let pointerIsInside = bounds.contains(
+            convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        )
+        setPointerInside(pointerIsInside)
     }
 
     private func setPointerInside(_ inside: Bool) {
@@ -60,6 +79,7 @@ final class EdgePanelCoordinator: NSObject {
     private var pendingFrameUpdate: Task<Void, Never>?
     private var lastRequestedFrame: CGRect?
     private var lastAppliedMode: PanelMode?
+    private var layoutCenterY: CGFloat?
     private var expansionEndWorkItem: DispatchWorkItem?
     private var expansionInProgress = false
 
@@ -237,13 +257,14 @@ final class EdgePanelCoordinator: NSObject {
         let size = targetSize(in: visibleFrame)
 
         let storedCenterY = model.preferences.panelCenterY
-        let currentCenterY = panel.frame.isEmpty ? 0 : panel.frame.midY
         let isEnteringOnboarding = model.panelMode == .onboarding && lastAppliedMode != .onboarding
         let preferredCenterY: CGFloat
         if isEnteringOnboarding || panel.frame.isEmpty {
             preferredCenterY = visibleFrame.midY
-        } else if currentCenterY > 0 {
-            preferredCenterY = currentCenterY
+        } else if let layoutCenterY {
+            preferredCenterY = layoutCenterY
+        } else if panel.frame.midY > 0 {
+            preferredCenterY = panel.frame.midY
         } else if storedCenterY > 0 {
             preferredCenterY = storedCenterY
         } else {
@@ -271,6 +292,7 @@ final class EdgePanelCoordinator: NSObject {
             ? min(max(preferredX, visibleFrame.minX + 8), visibleFrame.maxX - size.width - 8)
             : preferredX
         let targetFrame = CGRect(origin: CGPoint(x: x, y: y), size: size)
+        layoutCenterY = targetFrame.midY
 
         if lastRequestedFrame != targetFrame {
             lastRequestedFrame = targetFrame
@@ -290,7 +312,7 @@ final class EdgePanelCoordinator: NSObject {
                 NSAnimationContext.runAnimationGroup { context in
                     if isExpanding {
                         context.duration = HPMotion.expandDuration
-                        context.timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0, 0.2, 1)
+                        context.timingFunction = CAMediaTimingFunction(controlPoints: 0.33, 0.0, 0.67, 1.0)
                     } else if isInspectorResize {
                         context.duration = HPMotion.inspectorDuration
                         context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.82, 0.28, 1)
@@ -298,11 +320,19 @@ final class EdgePanelCoordinator: NSObject {
                         context.duration = HPMotion.panelDuration
                         context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.82, 0.28, 1)
                     }
+                    context.completionHandler = { [weak self] in
+                        self?.refreshPointerState()
+                    }
                     panel.animator().setFrame(targetFrame, display: true)
                 }
             } else {
                 panel.setFrame(targetFrame, display: true)
             }
+
+            // NSWindow resizing does not reliably produce a matching tracking
+            // event. Re-read the cursor after each frame request so a stationary
+            // pointer cannot be mistaken for an exit during expansion.
+            (panel.contentView as? PanelContentView)?.refreshPointerState()
         }
 
         lastAppliedMode = model.panelMode
@@ -312,6 +342,10 @@ final class EdgePanelCoordinator: NSObject {
         if model.panelMode == .onboarding {
             panel.makeKey()
         }
+    }
+
+    private func refreshPointerState() {
+        (panel.contentView as? PanelContentView)?.refreshPointerState()
     }
 
     private func beginExpansionWindow() {
@@ -328,7 +362,7 @@ final class EdgePanelCoordinator: NSObject {
         )
     }
 
-    private func targetSize(in visibleFrame: CGRect) -> CGSize {
+    func targetSize(in visibleFrame: CGRect) -> CGSize {
         switch model.panelMode {
         case .onboarding:
             return HPLayout.onboardingSize
@@ -342,12 +376,6 @@ final class EdgePanelCoordinator: NSObject {
                 height: railHeight(in: visibleFrame)
             )
         case .expanded:
-            if model.activeSection == .market {
-                return CGSize(
-                    width: HPLayout.expandedMarketWidth,
-                    height: min(HPLayout.expandedMarketHeight, visibleFrame.height - 20)
-                )
-            }
             return CGSize(
                 width: HPLayout.expandedPanelWidth,
                 height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
@@ -355,7 +383,7 @@ final class EdgePanelCoordinator: NSObject {
         case .settings:
             return CGSize(
                 width: HPLayout.expandedPanelWidth,
-                height: min(HPLayout.settingsHeight, visibleFrame.height - 20)
+                height: min(HPLayout.expandedPanelMaxHeight, visibleFrame.height - 20)
             )
         }
     }
@@ -392,10 +420,12 @@ final class EdgePanelCoordinator: NSObject {
         )
         panel.setFrameOrigin(CGPoint(x: clampedX, y: clampedY))
         lastRequestedFrame = panel.frame
+        layoutCenterY = panel.frame.midY
     }
 
     private func dragEnded() {
         dragOrigin = nil
+        layoutCenterY = panel.frame.midY
         model.preferences.panelCenterY = panel.frame.midY
     }
 

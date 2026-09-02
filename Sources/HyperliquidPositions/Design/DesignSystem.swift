@@ -31,13 +31,12 @@ enum HPLayout {
     static let marketInspectorHeight: CGFloat = 230
     static let expandedWidth: CGFloat = 480
     static let expandedMaxHeight: CGFloat = 820
-    static let settingsHeight: CGFloat = 620
     static let expandedMarketWidth: CGFloat = 548
     static let expandedMarketContentHeight: CGFloat = 584
     static let expandedMarketHeight: CGFloat = 733
     static let expandedMarketMaxHeight: CGFloat = 790.5
-    // Keep the regular expanded panel frame stable for positions and settings.
-    // The compact market board has a dedicated reference-sized frame.
+    // Keep the outer frame stable while content or settings change.
+    // The market sizing constants describe its content, not the window frame.
     static let expandedPanelWidth: CGFloat = max(expandedWidth, expandedMarketWidth)
     static let expandedPanelMaxHeight: CGFloat = max(expandedMaxHeight, expandedMarketMaxHeight)
     static let expandedFooterHeight: CGFloat = 64
@@ -56,11 +55,13 @@ enum HPLayout {
 enum HPMotion {
     static let panelDuration: TimeInterval = 0.36
     static let expandDuration: TimeInterval = 0.50
-    static let inspectorDuration: TimeInterval = 0.24
+    static let inspectorDuration: TimeInterval = 0.40
     static let autoHideDelay: Duration = .milliseconds(280)
     static let frameUpdateDebounce: Duration = .milliseconds(8)
     static let panel = Animation.timingCurve(0.22, 0.82, 0.28, 1, duration: panelDuration)
-    static let expand = Animation.timingCurve(0.4, 0, 0.2, 1, duration: expandDuration)
+    // A balanced curve keeps the first half of the expansion from rushing
+    // while retaining a clean, no-bounce arrival at the edge.
+    static let expand = Animation.timingCurve(0.33, 0.0, 0.67, 1.0, duration: expandDuration)
     static let inspector = Animation.timingCurve(0.22, 0.82, 0.28, 1, duration: inspectorDuration)
     static let control = Animation.easeOut(duration: 0.16)
 }

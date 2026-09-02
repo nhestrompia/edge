@@ -93,6 +93,7 @@ struct SidebarRootView: View {
                     .transition(inspectorTransition)
             }
         }
+        .frame(width: size.width, height: size.height, alignment: railAlignment)
     }
 
     private var inspectorHorizontalOffset: CGFloat {

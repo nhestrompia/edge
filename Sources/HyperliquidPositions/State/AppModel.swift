@@ -65,7 +65,9 @@ final class AppModel: ObservableObject {
     private var marketRefreshTask: Task<Void, Never>?
     private var marketStreamTask: Task<Void, Never>?
     private var collapseTask: Task<Void, Never>?
+    private var openingTask: Task<Void, Never>?
     private var isPointerInside = false
+    private var isOpening = false
     private var onboardingReturnMode: PanelMode?
     private var onboardingReturnSection: SidebarSection?
     private var settingsReturnMode: PanelMode = .expanded
@@ -172,6 +174,7 @@ final class AppModel: ObservableObject {
             onboardingReturnMode = nil
             onboardingReturnSection = nil
             isChangingWallet = false
+            cancelOpening()
             animate(HPMotion.panel) {
                 panelMode = preferences.autoHide ? .notch : .rail
             }
@@ -183,6 +186,7 @@ final class AppModel: ObservableObject {
     }
 
     func changeWallet() {
+        cancelOpening()
         let hasExistingWallet = WalletAddressValidator.isValid(preferences.walletAddress)
         onboardingReturnMode = hasExistingWallet ? onboardingRestoreMode : nil
         onboardingReturnSection = hasExistingWallet ? activeSection : nil
@@ -240,6 +244,9 @@ final class AppModel: ObservableObject {
         isPointerInside = true
         collapseTask?.cancel()
         if panelMode == .notch {
+            if !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                beginOpeningGuard()
+            }
             animate(HPMotion.expand) {
                 panelMode = .rail
             }
@@ -250,6 +257,11 @@ final class AppModel: ObservableObject {
         isPointerInside = false
         guard panelMode != .onboarding, panelMode != .settings, !isCaptureMode else { return }
         collapseTask?.cancel()
+        guard !isOpening else { return }
+        scheduleCollapse()
+    }
+
+    private func scheduleCollapse() {
         collapseTask = Task { [weak self] in
             try? await Task.sleep(for: HPMotion.autoHideDelay)
             guard !Task.isCancelled, let self, !self.isPointerInside else { return }
@@ -308,6 +320,7 @@ final class AppModel: ObservableObject {
     }
 
     func expand() {
+        cancelOpening()
         collapseTask?.cancel()
         animate(HPMotion.expand) {
             hoveredPositionID = nil
@@ -317,6 +330,7 @@ final class AppModel: ObservableObject {
     }
 
     func showRail() {
+        cancelOpening()
         collapseTask?.cancel()
         animate(HPMotion.panel) {
             hoveredPositionID = nil
@@ -327,6 +341,7 @@ final class AppModel: ObservableObject {
 
     func showSettings() {
         guard panelMode != .onboarding, panelMode != .settings else { return }
+        cancelOpening()
         collapseTask?.cancel()
         settingsReturnMode = panelMode
         hoveredPositionID = nil
@@ -339,6 +354,7 @@ final class AppModel: ObservableObject {
 
     func closeSettings() {
         guard panelMode == .settings else { return }
+        cancelOpening()
         let restoreMode = settingsReturnMode
         settingsReturnMode = .expanded
         animate(HPMotion.panel) {
@@ -348,6 +364,7 @@ final class AppModel: ObservableObject {
 
     func hidePositions() {
         guard panelMode != .onboarding else { return }
+        cancelOpening()
         animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
@@ -356,6 +373,7 @@ final class AppModel: ObservableObject {
     }
 
     func showPositions() {
+        cancelOpening()
         isPanelVisible = true
         guard WalletAddressValidator.isValid(trackedAddress) else {
             animate(HPMotion.panel) {
@@ -375,6 +393,7 @@ final class AppModel: ObservableObject {
     }
 
     private func collapseToNotch() {
+        cancelOpening()
         animate(HPMotion.panel) {
             hoveredPositionID = nil
             hoveredMarketSymbol = nil
@@ -385,6 +404,28 @@ final class AppModel: ObservableObject {
     private func animate(_ animation: Animation, changes: () -> Void) {
         let shouldReduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || isCaptureMode
         withAnimation(shouldReduceMotion ? nil : animation, changes)
+    }
+
+    private func beginOpeningGuard() {
+        openingTask?.cancel()
+        isOpening = true
+        openingTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(Int(HPMotion.expandDuration * 1_000)))
+            guard !Task.isCancelled, let self else { return }
+            self.openingTask = nil
+            self.isOpening = false
+            guard !self.isPointerInside,
+                  self.panelMode != .onboarding,
+                  self.panelMode != .settings,
+                  !self.isCaptureMode else { return }
+            self.scheduleCollapse()
+        }
+    }
+
+    private func cancelOpening() {
+        openingTask?.cancel()
+        openingTask = nil
+        isOpening = false
     }
 
     private func beginMonitoring() {

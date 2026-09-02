@@ -491,7 +491,7 @@ struct ExpandedSidebarView: View {
         }
         .buttonStyle(ExpandedFooterButtonStyle())
         .foregroundStyle(HPTheme.textSecondary)
-        .padding(.horizontal, model.activeSection == .market ? 10 : 0)
+        .padding(.horizontal, 10)
         .frame(height: HPLayout.expandedFooterHeight)
         .background(HPTheme.canvas.opacity(0.98))
         .overlay(alignment: .top) {

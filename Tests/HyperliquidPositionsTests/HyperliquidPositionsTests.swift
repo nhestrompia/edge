@@ -1,4 +1,5 @@
 import XCTest
+import AppKit
 import SwiftUI
 @testable import HyperliquidPositions
 
@@ -32,6 +33,60 @@ final class HyperliquidPositionsTests: XCTestCase {
         XCTAssertEqual(HPLayout.expandedMarketWidth, 548)
         XCTAssertEqual(HPLayout.expandedMarketContentHeight, 584)
         XCTAssertEqual(HPLayout.expandedMarketHeight, 733)
+    }
+
+    @MainActor
+    func testExpandedPanelOuterFrameDoesNotChangeAcrossContentSections() {
+        let model = AppModel.shared
+        let coordinator = EdgePanelCoordinator(model: model)
+        let visibleFrame = NSScreen.main?.visibleFrame
+            ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let originalMode = model.panelMode
+        let originalSection = model.activeSection
+        defer {
+            model.panelMode = originalMode
+            model.activeSection = originalSection
+        }
+
+        model.panelMode = .expanded
+        model.activeSection = .positions
+        let positionsSize = coordinator.targetSize(in: visibleFrame)
+
+        model.activeSection = .market
+        let marketsSize = coordinator.targetSize(in: visibleFrame)
+
+        model.panelMode = .settings
+        let settingsSize = coordinator.targetSize(in: visibleFrame)
+
+        XCTAssertEqual(positionsSize, marketsSize, "Expanded content sections must share one outer frame")
+        XCTAssertEqual(positionsSize, settingsSize, "Settings must not resize the expanded outer frame")
+    }
+
+    @MainActor
+    func testTransientExitDuringOpeningDoesNotCollapseBeforeOpeningCompletes() async {
+        let model = AppModel.shared
+        let originalMode = model.panelMode
+        let originalSection = model.activeSection
+        let originalAutoHide = model.preferences.autoHide
+        defer {
+            model.panelMode = originalMode
+            model.activeSection = originalSection
+            model.preferences.autoHide = originalAutoHide
+            model.pointerEntered()
+        }
+
+        model.preferences.autoHide = true
+        model.panelMode = .notch
+        model.pointerEntered()
+        model.pointerExited()
+
+        try? await Task.sleep(for: .milliseconds(350))
+
+        XCTAssertEqual(model.panelMode, .rail, "A resize-generated exit must not reverse the opening animation")
+
+        try? await Task.sleep(for: .milliseconds(500))
+
+        XCTAssertEqual(model.panelMode, .notch, "A genuine exit must still collapse after opening settles")
     }
 
     func testWalletAddressValidation() {
