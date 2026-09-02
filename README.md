@@ -28,12 +28,38 @@ HYPERLIQUID_DEMO=1 EDGE_LAYOUT_STRESS=1 swift run
 ## Build the app bundle
 
 ```sh
-chmod +x Scripts/build-app.sh
 Scripts/build-app.sh
 open "dist/edge.app"
 ```
 
-The bundle is created at `dist/edge.app` and ad-hoc signed for local use. A Developer ID signature and notarization are still required for distribution outside the Mac that built it.
+The bundle is created at `dist/edge.app`, includes the generated `edge.icns` icon and native `Assets.car` catalog, and is ad-hoc signed for local use. `VERSION`, `BUILD_NUMBER`, and `CODESIGN_IDENTITY` can be provided as environment variables.
+
+## Package a macOS installer
+
+Create both a drag-to-Applications disk image and a standard package installer:
+
+```sh
+Scripts/release.sh
+open "dist/edge-0.1.0.dmg"
+```
+
+The release artifacts are written to `dist/`:
+
+- `edge-<version>.dmg` — drag `edge.app` to Applications.
+- `edge-<version>.pkg` — installs `edge.app` into `/Applications`.
+- `edge-<version>.sha256` — checksums for both installers.
+
+For signed distribution, set a Developer ID application identity and an optional package identity:
+
+```sh
+CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+PKG_SIGNING_IDENTITY="Developer ID Installer: Your Name (TEAMID)" \
+NOTARY_PROFILE="notarytool-profile" \
+VERSION=1.0.0 BUILD_NUMBER=1 \
+Scripts/release.sh
+```
+
+`Scripts/make-app-icon.sh`, `Scripts/package-dmg.sh`, and `Scripts/package-pkg.sh` are also callable independently.
 
 ## Data flow
 

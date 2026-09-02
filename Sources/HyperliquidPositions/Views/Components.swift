@@ -1,7 +1,50 @@
+import AppKit
 import SwiftUI
 
-struct HyperliquidMark: View {
+private enum EdgeLogoResource {
+    static let image: NSImage = {
+        if let url = Bundle.main.url(forResource: "edge-logo-extracted", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            return image
+        }
+
+        if let url = Bundle.module.url(forResource: "edge-logo-extracted", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            return image
+        }
+
+        return NSImage(size: NSSize(width: 1, height: 1))
+    }()
+}
+
+struct EdgeLogo: View {
     var size: CGFloat = 44
+    var foreground: Color = HPTheme.textPrimary
+
+    var body: some View {
+        Image(nsImage: EdgeLogoResource.image)
+            .resizable()
+            .interpolation(.high)
+            .renderingMode(.template)
+            .foregroundStyle(
+                LinearGradient(
+                    stops: [
+                        .init(color: foreground, location: 0),
+                        .init(color: foreground.opacity(0.76), location: 0.5),
+                        .init(color: foreground.opacity(0.28), location: 1)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
+    }
+}
+
+struct HyperliquidIcon: View {
+    var size: CGFloat = 32
     var foreground: Color = HPTheme.positive
     var background: Color = HPTheme.positive.opacity(0.09)
 
@@ -16,6 +59,58 @@ struct HyperliquidMark: View {
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+    }
+}
+
+private struct HyperliquidGlyphShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let x = { (value: CGFloat) in rect.minX + value * rect.width }
+        let y = { (value: CGFloat) in rect.minY + value * rect.height }
+        var path = Path()
+
+        path.move(to: CGPoint(x: x(0.03), y: y(0.50)))
+        path.addCurve(
+            to: CGPoint(x: x(0.23), y: y(0.12)),
+            control1: CGPoint(x: x(0.03), y: y(0.27)),
+            control2: CGPoint(x: x(0.12), y: y(0.12))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.50), y: y(0.43)),
+            control1: CGPoint(x: x(0.38), y: y(0.12)),
+            control2: CGPoint(x: x(0.39), y: y(0.43))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.77), y: y(0.12)),
+            control1: CGPoint(x: x(0.61), y: y(0.43)),
+            control2: CGPoint(x: x(0.62), y: y(0.12))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.97), y: y(0.50)),
+            control1: CGPoint(x: x(0.90), y: y(0.12)),
+            control2: CGPoint(x: x(0.97), y: y(0.27))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.77), y: y(0.88)),
+            control1: CGPoint(x: x(0.97), y: y(0.73)),
+            control2: CGPoint(x: x(0.88), y: y(0.88))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.50), y: y(0.57)),
+            control1: CGPoint(x: x(0.62), y: y(0.88)),
+            control2: CGPoint(x: x(0.61), y: y(0.57))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.23), y: y(0.88)),
+            control1: CGPoint(x: x(0.39), y: y(0.57)),
+            control2: CGPoint(x: x(0.38), y: y(0.88))
+        )
+        path.addCurve(
+            to: CGPoint(x: x(0.03), y: y(0.50)),
+            control1: CGPoint(x: x(0.10), y: y(0.88)),
+            control2: CGPoint(x: x(0.03), y: y(0.73))
+        )
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -134,7 +229,11 @@ struct SourceMark: View {
                     }
                 }
             case .hyperliquid:
-                HyperliquidMark(size: size)
+                HyperliquidIcon(
+                    size: size,
+                    foreground: HPTheme.positive,
+                    background: .clear
+                )
             }
         }
         .frame(width: size, height: size)
@@ -152,58 +251,6 @@ enum MarketSource: Equatable {
         case .binance: "Binance"
         case .hyperliquid: "Hyperliquid"
         }
-    }
-}
-
-private struct HyperliquidGlyphShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let x = { (value: CGFloat) in rect.minX + value * rect.width }
-        let y = { (value: CGFloat) in rect.minY + value * rect.height }
-        var path = Path()
-
-        path.move(to: CGPoint(x: x(0.03), y: y(0.50)))
-        path.addCurve(
-            to: CGPoint(x: x(0.23), y: y(0.12)),
-            control1: CGPoint(x: x(0.03), y: y(0.27)),
-            control2: CGPoint(x: x(0.12), y: y(0.12))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.50), y: y(0.43)),
-            control1: CGPoint(x: x(0.38), y: y(0.12)),
-            control2: CGPoint(x: x(0.39), y: y(0.43))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.77), y: y(0.12)),
-            control1: CGPoint(x: x(0.61), y: y(0.43)),
-            control2: CGPoint(x: x(0.62), y: y(0.12))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.97), y: y(0.50)),
-            control1: CGPoint(x: x(0.90), y: y(0.12)),
-            control2: CGPoint(x: x(0.97), y: y(0.27))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.77), y: y(0.88)),
-            control1: CGPoint(x: x(0.97), y: y(0.73)),
-            control2: CGPoint(x: x(0.88), y: y(0.88))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.50), y: y(0.57)),
-            control1: CGPoint(x: x(0.62), y: y(0.88)),
-            control2: CGPoint(x: x(0.61), y: y(0.57))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.23), y: y(0.88)),
-            control1: CGPoint(x: x(0.39), y: y(0.57)),
-            control2: CGPoint(x: x(0.38), y: y(0.88))
-        )
-        path.addCurve(
-            to: CGPoint(x: x(0.03), y: y(0.50)),
-            control1: CGPoint(x: x(0.10), y: y(0.88)),
-            control2: CGPoint(x: x(0.03), y: y(0.73))
-        )
-        path.closeSubpath()
-        return path
     }
 }
 

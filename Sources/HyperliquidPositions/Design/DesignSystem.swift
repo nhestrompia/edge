@@ -23,6 +23,7 @@ enum HPTheme {
 }
 
 enum HPLayout {
+    static let edgeLogoSize: CGFloat = 32
     static let notchSize = CGSize(width: 30, height: 118)
     static let railWidth: CGFloat = 112
     static let inspectorWidth: CGFloat = 386

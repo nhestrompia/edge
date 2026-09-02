@@ -67,7 +67,7 @@ struct ExpandedSidebarView: View {
     var body: some View {
         VStack(spacing: 0) {
             if model.panelMode == .settings {
-                SettingsPageView(onBack: model.closeSettings)
+                SettingsPageView()
             } else {
                 header
                     .padding(.leading, 22.5)
@@ -90,10 +90,6 @@ struct ExpandedSidebarView: View {
         .background {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(HPTheme.canvas.opacity(0.985))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                        .strokeBorder(HPTheme.lineStrong, lineWidth: 0.8)
-                }
                 .shadow(
                     color: HPTheme.panelShadow,
                     radius: 24,
@@ -101,15 +97,15 @@ struct ExpandedSidebarView: View {
                     y: 12
                 )
         }
+        .overlay {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .strokeBorder(HPTheme.lineStrong, lineWidth: 0.8)
+        }
     }
 
     private var header: some View {
         HStack(spacing: 17) {
-            HyperliquidMark(
-                size: 49,
-                foreground: HPTheme.textPrimary,
-                background: HPTheme.surfaceRaised.opacity(0.76)
-            )
+            EdgeLogo(size: HPLayout.edgeLogoSize, foreground: HPTheme.textPrimary)
 
             Button {
                 NSPasteboard.general.clearContents()

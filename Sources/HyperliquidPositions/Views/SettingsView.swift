@@ -2,14 +2,9 @@ import SwiftUI
 
 struct SettingsPageView: View {
     @EnvironmentObject private var model: AppModel
-    let onBack: (() -> Void)?
 
     private var hasWallet: Bool {
         !model.trackedAddress.isEmpty
-    }
-
-    init(onBack: (() -> Void)? = nil) {
-        self.onBack = onBack
     }
 
     var body: some View {
@@ -37,38 +32,11 @@ struct SettingsPageView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            if let onBack {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(HPTheme.textSecondary)
-                        .frame(width: 32, height: 32)
-                        .background(Circle().fill(HPTheme.surfaceRaised.opacity(0.72)))
-                        .overlay {
-                            Circle()
-                                .strokeBorder(HPTheme.line, lineWidth: 0.8)
-                        }
-                }
-                .buttonStyle(.plain)
-                .help("Back to overview")
-                .accessibilityLabel("Back to overview")
-            }
+            EdgeLogo(size: HPLayout.edgeLogoSize, foreground: HPTheme.textPrimary)
 
-            HyperliquidMark(
-                size: 40,
-                foreground: HPTheme.positive,
-                background: HPTheme.positive.opacity(0.10)
-            )
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("edge")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(HPTheme.textSecondary)
-
-                Text("Settings")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(HPTheme.textPrimary)
-            }
+            Text("Settings")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(HPTheme.textPrimary)
 
             Spacer(minLength: 0)
         }
@@ -78,7 +46,7 @@ struct SettingsPageView: View {
     private var accountSection: some View {
         settingsSection(title: "Account") {
             HStack(spacing: 12) {
-                HyperliquidMark(
+                HyperliquidIcon(
                     size: 32,
                     foreground: HPTheme.positive,
                     background: HPTheme.positive.opacity(0.08)
@@ -223,7 +191,7 @@ struct SettingsPageView: View {
             .labelsHidden()
             .pickerStyle(.segmented)
             .controlSize(.small)
-            .frame(width: 148)
+            .frame(width: 148, alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

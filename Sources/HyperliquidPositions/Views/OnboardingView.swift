@@ -76,7 +76,7 @@ struct OnboardingView: View {
 
     private var topBar: some View {
         HStack(alignment: .top, spacing: 0) {
-            HyperliquidMark(size: 52)
+            EdgeLogo(size: HPLayout.edgeLogoSize, foreground: HPTheme.textPrimary)
 
             Spacer(minLength: 0)
 

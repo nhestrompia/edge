@@ -15,7 +15,10 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "HyperliquidPositions"
+            name: "HyperliquidPositions",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "HyperliquidPositionsTests",

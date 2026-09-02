@@ -14,6 +14,10 @@
     <string>edge</string>
     <key>CFBundleDisplayName</key>
     <string>edge</string>
+    <key>CFBundleIconFile</key>
+    <string>edge.icns</string>
+    <key>CFBundleIconName</key>
+    <string>edge</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
