@@ -244,9 +244,9 @@ final class AppModel: ObservableObject {
         isPointerInside = true
         collapseTask?.cancel()
         if panelMode == .notch {
-            if !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
-                beginOpeningGuard()
-            }
+            // Keep the guard when Reduce Motion makes the frame update immediate.
+            // AppKit can still send a transient exit while the panel is resizing.
+            beginOpeningGuard()
             animate(HPMotion.expand) {
                 panelMode = .rail
             }
