@@ -37,13 +37,13 @@ Run the local demo without a wallet or network data:
 HYPERLIQUID_DEMO=1 swift run
 ```
 
-Build a universal app and installers:
+Build a universal app and DMG:
 
 ```sh
-VERSION=0.1.0 BUILD_NUMBER=1 Scripts/release.sh
+VERSION=0.1.0 BUILD_NUMBER=1 RELEASE_DMG_ONLY=1 Scripts/release.sh
 ```
 
-The command writes `edge-<version>.dmg`, `edge-<version>.pkg`, and `edge-<version>.sha256` to `dist/`. Set `CODESIGN_IDENTITY`, `PKG_SIGNING_IDENTITY`, and `NOTARY_PROFILE` for signed and notarized distribution.
+The command writes `edge-<version>.dmg` and `edge-<version>.sha256` to `dist/`. Set `CODESIGN_IDENTITY` and `NOTARY_PROFILE` for signed and notarized distribution. The optional PKG installer remains available through `Scripts/package-pkg.sh`.
 
 GitHub release signing is configured in [docs/releasing.md](docs/releasing.md). The workflow refuses to publish an ad-hoc build.
 
@@ -56,7 +56,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-GitHub Actions runs the tests, builds universal installers, and attaches the DMG, PKG, and checksum file to the release. You can also run the workflow manually with a version number.
+GitHub Actions runs the tests, builds a universal DMG, and attaches the DMG and checksum file to the release. You can also run the workflow manually with a version number.
 
 ## Data and privacy
 

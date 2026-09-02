@@ -13,6 +13,7 @@ PKG_SIGNING_IDENTITY="${PKG_SIGNING_IDENTITY:-}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 NOTARY_KEYCHAIN="${NOTARY_KEYCHAIN:-}"
 REQUIRE_SIGNING="${REQUIRE_SIGNING:-0}"
+RELEASE_DMG_ONLY="${RELEASE_DMG_ONLY:-0}"
 DMG_PATH="${DIST_DIR}/edge-${VERSION}.dmg"
 PKG_PATH="${DIST_DIR}/edge-${VERSION}.pkg"
 CHECKSUM_PATH="${DIST_DIR}/edge-${VERSION}.sha256"
@@ -22,7 +23,7 @@ if [[ "${REQUIRE_SIGNING}" == "1" ]]; then
         print -u2 "REQUIRE_SIGNING needs a Developer ID Application CODESIGN_IDENTITY"
         exit 1
     fi
-    if [[ "${PKG_SIGNING_IDENTITY}" != "Developer ID Installer:"* ]]; then
+    if [[ "${RELEASE_DMG_ONLY}" != "1" && "${PKG_SIGNING_IDENTITY}" != "Developer ID Installer:"* ]]; then
         print -u2 "REQUIRE_SIGNING needs a Developer ID Installer PKG_SIGNING_IDENTITY"
         exit 1
     fi
@@ -36,7 +37,9 @@ export VERSION BUILD_NUMBER CODESIGN_IDENTITY PKG_SIGNING_IDENTITY
 
 "${SCRIPT_DIR}/build-app.sh"
 "${SCRIPT_DIR}/package-dmg.sh" "${DMG_PATH}"
-"${SCRIPT_DIR}/package-pkg.sh" "${PKG_PATH}"
+if [[ "${RELEASE_DMG_ONLY}" != "1" ]]; then
+    "${SCRIPT_DIR}/package-pkg.sh" "${PKG_PATH}"
+fi
 
 if [[ -n "${NOTARY_PROFILE}" ]]; then
     if [[ "${CODESIGN_IDENTITY}" == "-" ]]; then
@@ -52,18 +55,29 @@ if [[ -n "${NOTARY_PROFILE}" ]]; then
 
     xcrun notarytool submit "${DMG_PATH}" "${NOTARY_ARGS[@]}" --wait
     xcrun stapler staple "${DMG_PATH}"
-    xcrun notarytool submit "${PKG_PATH}" "${NOTARY_ARGS[@]}" --wait
-    xcrun stapler staple "${PKG_PATH}"
     xcrun stapler validate "${DMG_PATH}"
-    xcrun stapler validate "${PKG_PATH}"
+    if [[ "${RELEASE_DMG_ONLY}" != "1" ]]; then
+        xcrun notarytool submit "${PKG_PATH}" "${NOTARY_ARGS[@]}" --wait
+        xcrun stapler staple "${PKG_PATH}"
+        xcrun stapler validate "${PKG_PATH}"
+    fi
 fi
 
-(
-    cd "${DIST_DIR}"
-    shasum -a 256 "${DMG_PATH:t}" "${PKG_PATH:t}"
-) > "${CHECKSUM_PATH}"
+if [[ "${RELEASE_DMG_ONLY}" == "1" ]]; then
+    (
+        cd "${DIST_DIR}"
+        shasum -a 256 "${DMG_PATH:t}"
+    ) > "${CHECKSUM_PATH}"
+else
+    (
+        cd "${DIST_DIR}"
+        shasum -a 256 "${DMG_PATH:t}" "${PKG_PATH:t}"
+    ) > "${CHECKSUM_PATH}"
+fi
 
 print "Release artifacts:"
 print "  ${DMG_PATH}"
-print "  ${PKG_PATH}"
+if [[ "${RELEASE_DMG_ONLY}" != "1" ]]; then
+    print "  ${PKG_PATH}"
+fi
 print "  ${CHECKSUM_PATH}"
