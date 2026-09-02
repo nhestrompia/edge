@@ -3,26 +3,26 @@
 import PackageDescription
 
 let package = Package(
-    name: "HyperliquidPositions",
+    name: "edge",
     platforms: [
         .macOS(.v14)
     ],
     products: [
         .executable(
-            name: "HyperliquidPositions",
-            targets: ["HyperliquidPositions"]
+            name: "edge",
+            targets: ["Edge"]
         )
     ],
     targets: [
         .executableTarget(
-            name: "HyperliquidPositions",
+            name: "Edge",
             resources: [
                 .process("Resources")
             ]
         ),
         .testTarget(
-            name: "HyperliquidPositionsTests",
-            dependencies: ["HyperliquidPositions"]
+            name: "EdgeTests",
+            dependencies: ["Edge"]
         )
     ]
 )

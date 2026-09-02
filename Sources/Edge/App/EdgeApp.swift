@@ -9,7 +9,7 @@ import SwiftUI
  FORM: User-pinned edge cockpit, seed f1eedd09. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
  */
 @main
-struct HyperliquidPositionsApp: App {
+struct EdgeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var model = AppModel.shared
 

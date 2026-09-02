@@ -5,9 +5,9 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>HyperliquidPositions</string>
+    <string>edge</string>
     <key>CFBundleIdentifier</key>
-    <string>com.hyperliquid.positions</string>
+    <string>com.edge</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

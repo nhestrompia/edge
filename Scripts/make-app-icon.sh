@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"
 PROJECT_DIR="${SCRIPT_DIR:h}"
-SOURCE_IMAGE="${PROJECT_DIR}/Sources/HyperliquidPositions/Resources/edge-logo-extracted.png"
+SOURCE_IMAGE="${PROJECT_DIR}/Sources/Edge/Resources/edge-logo-extracted.png"
 CONTENTS_JSON="${PROJECT_DIR}/AppResources/Assets.xcassets/edge.appiconset/Contents.json"
 OUTPUT_PATH="${1:-${PROJECT_DIR}/dist/edge.icns}"
 OUTPUT_DIR="${OUTPUT_PATH:h}"

@@ -9,7 +9,7 @@ INFO_PLIST="${PROJECT_DIR}/AppResources/Info.plist"
 APP_DIR="${DIST_DIR}/edge.app"
 VERSION="${VERSION:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${INFO_PLIST}")}"
 OUTPUT_PATH="${1:-${DIST_DIR}/edge-${VERSION}.pkg}"
-PKG_IDENTIFIER="${PKG_IDENTIFIER:-com.hyperliquid.positions}"
+PKG_IDENTIFIER="${PKG_IDENTIFIER:-com.edge}"
 PKG_SIGNING_IDENTITY="${PKG_SIGNING_IDENTITY:-}"
 
 command -v pkgbuild >/dev/null || { print -u2 "pkgbuild is required to build the installer package"; exit 1; }

@@ -1,9 +1,9 @@
 import XCTest
 import AppKit
 import SwiftUI
-@testable import HyperliquidPositions
+@testable import Edge
 
-final class HyperliquidPositionsTests: XCTestCase {
+final class EdgeTests: XCTestCase {
     @MainActor
     func testPanelHostsSwiftUIInsideNeutralAppKitContainer() {
         let container = EdgePanelCoordinator.makeContentView(rootView: Text("Test"))

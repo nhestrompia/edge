@@ -12,14 +12,14 @@ RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 INFO_PLIST="${PROJECT_DIR}/AppResources/Info.plist"
 ICON_PATH="${DIST_DIR}/edge.icns"
 ASSETS_CAR_PATH="${DIST_DIR}/Assets.car"
-LOGO_RESOURCE="${PROJECT_DIR}/Sources/HyperliquidPositions/Resources/edge-logo-extracted.png"
+LOGO_RESOURCE="${PROJECT_DIR}/Sources/Edge/Resources/edge-logo-extracted.png"
 
 VERSION="${VERSION:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${INFO_PLIST}")}"
 BUILD_NUMBER="${BUILD_NUMBER:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${INFO_PLIST}")}"
 CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 
-export CLANG_MODULE_CACHE_PATH="${TMPDIR:-/private/tmp}/hyperliquid-positions-clang-cache"
-export SWIFTPM_MODULECACHE_OVERRIDE="${TMPDIR:-/private/tmp}/hyperliquid-positions-swiftpm-cache"
+export CLANG_MODULE_CACHE_PATH="${TMPDIR:-/private/tmp}/edge-clang-cache"
+export SWIFTPM_MODULECACHE_OVERRIDE="${TMPDIR:-/private/tmp}/edge-swiftpm-cache"
 
 cd "${PROJECT_DIR}"
 swift build --disable-sandbox -c release
@@ -28,7 +28,7 @@ BIN_DIR="$(swift build --disable-sandbox -c release --show-bin-path)"
 rm -rf "${APP_DIR}"
 mkdir -p "${MACOS_DIR}"
 mkdir -p "${RESOURCES_DIR}"
-cp "${BIN_DIR}/HyperliquidPositions" "${MACOS_DIR}/HyperliquidPositions"
+cp "${BIN_DIR}/edge" "${MACOS_DIR}/edge"
 cp "${INFO_PLIST}" "${CONTENTS_DIR}/Info.plist"
 cp "${LOGO_RESOURCE}" "${RESOURCES_DIR}/edge-logo-extracted.png"
 

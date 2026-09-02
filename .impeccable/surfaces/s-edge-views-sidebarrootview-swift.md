@@ -1,8 +1,8 @@
 ---
 version: 1
-slug: "s-hyperliquidpositions-views-sidebarrootview-swift"
-primary_target: "Sources/HyperliquidPositions/Views/SidebarRootView.swift"
-related_targets: ["Sources/HyperliquidPositions/Views/RailView.swift","Sources/HyperliquidPositions/Views/HoverCardView.swift","Sources/HyperliquidPositions/Views/ExpandedSidebarView.swift","Sources/HyperliquidPositions/Views/MarketViews.swift","Sources/HyperliquidPositions/Views/OnboardingView.swift","Sources/HyperliquidPositions/Views/NotchView.swift","Sources/HyperliquidPositions/Window/EdgePanel.swift"]
+slug: "s-edge-views-sidebarrootview-swift"
+primary_target: "Sources/Edge/Views/SidebarRootView.swift"
+related_targets: ["Sources/Edge/Views/RailView.swift","Sources/Edge/Views/HoverCardView.swift","Sources/Edge/Views/ExpandedSidebarView.swift","Sources/Edge/Views/MarketViews.swift","Sources/Edge/Views/OnboardingView.swift","Sources/Edge/Views/NotchView.swift","Sources/Edge/Window/EdgePanel.swift"]
 ---
 
 # Edge Sidebar
