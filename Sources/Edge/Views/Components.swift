@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 private enum EdgeLogoResource {
+    @MainActor
     static let image: NSImage = {
         if let url = Bundle.main.url(forResource: "edge-logo-extracted", withExtension: "png"),
            let image = NSImage(contentsOf: url) {
