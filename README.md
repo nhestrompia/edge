@@ -11,7 +11,7 @@ Add a public Ethereum wallet address to start. edge is read-only. It never asks 
 3. Open the disk image and drag `edge.app` to Applications.
 4. Open edge and paste your public Hyperliquid wallet address.
 
-Releases without Developer ID notarization require one extra macOS step. Control-click `edge.app`, choose **Open**, then choose **Open** in the warning dialog.
+The `v0.1.1` release predates the signing setup and may show a Gatekeeper warning. Future releases are configured to publish only after Developer ID signing and Apple notarization are set up.
 
 edge requires macOS 14 or later and runs on Apple silicon and Intel Macs.
 
@@ -44,6 +44,8 @@ VERSION=0.1.0 BUILD_NUMBER=1 Scripts/release.sh
 ```
 
 The command writes `edge-<version>.dmg`, `edge-<version>.pkg`, and `edge-<version>.sha256` to `dist/`. Set `CODESIGN_IDENTITY`, `PKG_SIGNING_IDENTITY`, and `NOTARY_PROFILE` for signed and notarized distribution.
+
+GitHub release signing is configured in [docs/releasing.md](docs/releasing.md). The workflow refuses to publish an ad-hoc build.
 
 ## Publish a release
 
