@@ -17,18 +17,35 @@ LOGO_RESOURCE="${PROJECT_DIR}/Sources/Edge/Resources/edge-logo-extracted.png"
 VERSION="${VERSION:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${INFO_PLIST}")}"
 BUILD_NUMBER="${BUILD_NUMBER:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${INFO_PLIST}")}"
 CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
+ARCHS="${ARCHS:-arm64 x86_64}"
 
 export CLANG_MODULE_CACHE_PATH="${TMPDIR:-/private/tmp}/edge-clang-cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="${TMPDIR:-/private/tmp}/edge-swiftpm-cache"
+mkdir -p "${CLANG_MODULE_CACHE_PATH}" "${SWIFTPM_MODULECACHE_OVERRIDE}"
 
 cd "${PROJECT_DIR}"
-swift build --disable-sandbox -c release
-BIN_DIR="$(swift build --disable-sandbox -c release --show-bin-path)"
+typeset -a ARCH_LIST BINARIES
+ARCH_LIST=(${=ARCHS})
+if (( ${#ARCH_LIST[@]} == 0 )); then
+    print -u2 "ARCHS must contain at least one architecture"
+    exit 1
+fi
+
+for architecture in "${ARCH_LIST[@]}"; do
+    swift build --disable-sandbox -c release --arch "${architecture}"
+    BIN_DIR="$(swift build --disable-sandbox -c release --arch "${architecture}" --show-bin-path)"
+    BINARIES+=("${BIN_DIR}/edge")
+done
 
 rm -rf "${APP_DIR}"
 mkdir -p "${MACOS_DIR}"
 mkdir -p "${RESOURCES_DIR}"
-cp "${BIN_DIR}/edge" "${MACOS_DIR}/edge"
+if (( ${#BINARIES[@]} == 1 )); then
+    cp "${BINARIES[1]}" "${MACOS_DIR}/edge"
+else
+    command -v lipo >/dev/null || { print -u2 "lipo is required to combine app architectures"; exit 1; }
+    lipo -create "${BINARIES[@]}" -output "${MACOS_DIR}/edge"
+fi
 cp "${INFO_PLIST}" "${CONTENTS_DIR}/Info.plist"
 cp "${LOGO_RESOURCE}" "${RESOURCES_DIR}/edge-logo-extracted.png"
 

@@ -19,8 +19,6 @@ export VERSION BUILD_NUMBER CODESIGN_IDENTITY
 "${SCRIPT_DIR}/package-dmg.sh" "${DMG_PATH}"
 "${SCRIPT_DIR}/package-pkg.sh" "${PKG_PATH}"
 
-shasum -a 256 "${DMG_PATH}" "${PKG_PATH}" > "${CHECKSUM_PATH}"
-
 if [[ -n "${NOTARY_PROFILE:-}" ]]; then
     if [[ "${CODESIGN_IDENTITY}" == "-" ]]; then
         print -u2 "NOTARY_PROFILE requires a Developer ID CODESIGN_IDENTITY"
@@ -31,7 +29,14 @@ if [[ -n "${NOTARY_PROFILE:-}" ]]; then
     xcrun stapler staple "${DMG_PATH}"
     xcrun notarytool submit "${PKG_PATH}" --keychain-profile "${NOTARY_PROFILE}" --wait
     xcrun stapler staple "${PKG_PATH}"
+    xcrun stapler validate "${DMG_PATH}"
+    xcrun stapler validate "${PKG_PATH}"
 fi
+
+(
+    cd "${DIST_DIR}"
+    shasum -a 256 "${DMG_PATH:t}" "${PKG_PATH:t}"
+) > "${CHECKSUM_PATH}"
 
 print "Release artifacts:"
 print "  ${DMG_PATH}"

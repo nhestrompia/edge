@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example 0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-14
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Check the macOS toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+          if ! command -v ffmpeg >/dev/null; then
+            brew install ffmpeg
+          fi
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        env:
+          VERSION_INPUT: ${{ inputs.version || github.ref_name }}
+        run: |
+          version="${VERSION_INPUT#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Version must use semantic versioning, for example 0.1.0"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests
+        env:
+          CLANG_MODULE_CACHE_PATH: ${{ runner.temp }}/edge-clang-cache
+          SWIFTPM_MODULECACHE_OVERRIDE: ${{ runner.temp }}/edge-swiftpm-cache
+        run: |
+          mkdir -p "$CLANG_MODULE_CACHE_PATH" "$SWIFTPM_MODULECACHE_OVERRIDE"
+          swift test --disable-sandbox
+
+      - name: Build release artifacts
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          ARCHS: arm64 x86_64
+        run: Scripts/release.sh
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TARGET: ${{ github.sha }}
+        run: |
+          artifacts=(
+            "dist/edge-${RELEASE_VERSION}.dmg"
+            "dist/edge-${RELEASE_VERSION}.pkg"
+            "dist/edge-${RELEASE_VERSION}.sha256"
+          )
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${artifacts[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${artifacts[@]}" \
+              --target "$RELEASE_TARGET" \
+              --title "edge $RELEASE_VERSION" \
+              --generate-notes
+          fi

@@ -1,71 +1,61 @@
-# edge for macOS
+# edge
 
-A read-only macOS edge utility for monitoring open Hyperliquid perpetual positions plus live BTC, ETH, and SOL spot prices. It uses a public wallet address only—no wallet connection, signature, private key, or trading API key.
+edge is a native macOS utility that keeps your open Hyperliquid perpetual positions visible at the edge of your screen. It also shows live BTC, ETH, and SOL spot prices.
 
-## Requirements
+Add a public Ethereum wallet address to start. edge is read-only. It never asks for a wallet connection, private key, signature, or trading API key.
 
-- macOS 14 or later
-- Xcode 16 or later with the Swift toolchain installed
+## Install
 
-## Run from source
+1. Open the [latest release](https://github.com/nhestrompia/edge/releases).
+2. Download `edge-<version>.dmg`.
+3. Open the disk image and drag `edge.app` to Applications.
+4. Open edge and paste your public Hyperliquid wallet address.
+
+Releases without Developer ID notarization require one extra macOS step. Control-click `edge.app`, choose **Open**, then choose **Open** in the warning dialog.
+
+edge requires macOS 14 or later and runs on Apple silicon and Intel Macs.
+
+## What edge shows
+
+- Open Hyperliquid positions with live mark prices, PnL, leverage, and liquidation distance.
+- BTC, ETH, and SOL prices with 24-hour change and daily range.
+- A compact edge rail, hover details, and an expanded account view.
+- Settings for auto-hide, position display, screen edge, always-on-top, and launch at login.
+
+## Build from source
+
+You need Xcode 16 or later.
 
 ```sh
+swift test
 swift run
 ```
 
-For a local interface demo with sample positions:
+Run the local demo without a wallet or network data:
 
 ```sh
 HYPERLIQUID_DEMO=1 swift run
 ```
 
-To exercise rapid notch, rail, inspector, asset, and expanded-panel resizing with the five-position regression fixture:
+Build a universal app and installers:
 
 ```sh
-HYPERLIQUID_DEMO=1 EDGE_LAYOUT_STRESS=1 swift run
+VERSION=0.1.0 BUILD_NUMBER=1 Scripts/release.sh
 ```
 
-## Build the app bundle
+The command writes `edge-<version>.dmg`, `edge-<version>.pkg`, and `edge-<version>.sha256` to `dist/`. Set `CODESIGN_IDENTITY`, `PKG_SIGNING_IDENTITY`, and `NOTARY_PROFILE` for signed and notarized distribution.
+
+## Publish a release
+
+Push a version tag to run the GitHub release workflow:
 
 ```sh
-Scripts/build-app.sh
-open "dist/edge.app"
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-The bundle is created at `dist/edge.app`, includes the generated `edge.icns` icon and native `Assets.car` catalog, and is ad-hoc signed for local use. `VERSION`, `BUILD_NUMBER`, and `CODESIGN_IDENTITY` can be provided as environment variables.
+GitHub Actions runs the tests, builds universal installers, and attaches the DMG, PKG, and checksum file to the release. You can also run the workflow manually with a version number.
 
-## Package a macOS installer
+## Data and privacy
 
-Create both a drag-to-Applications disk image and a standard package installer:
-
-```sh
-Scripts/release.sh
-open "dist/edge-0.1.0.dmg"
-```
-
-The release artifacts are written to `dist/`:
-
-- `edge-<version>.dmg` — drag `edge.app` to Applications.
-- `edge-<version>.pkg` — installs `edge.app` into `/Applications`.
-- `edge-<version>.sha256` — checksums for both installers.
-
-For signed distribution, set a Developer ID application identity and an optional package identity:
-
-```sh
-CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
-PKG_SIGNING_IDENTITY="Developer ID Installer: Your Name (TEAMID)" \
-NOTARY_PROFILE="notarytool-profile" \
-VERSION=1.0.0 BUILD_NUMBER=1 \
-Scripts/release.sh
-```
-
-`Scripts/make-app-icon.sh`, `Scripts/package-dmg.sh`, and `Scripts/package-pkg.sh` are also callable independently.
-
-## Data flow
-
-- `POST https://api.hyperliquid.xyz/info` with `clearinghouseState` reconciles open positions.
-- `wss://api.hyperliquid.xyz/ws` streams `allMids` and `clearinghouseState` updates.
-- `GET https://data-api.binance.vision/api/v3/ticker/24hr` seeds the BTC/USDT, ETH/USDT, and SOL/USDT market view.
-- `wss://data-stream.binance.vision` streams one-second mini-ticker updates for those three public markets.
-- BTC, ETH, and SOL use exact CoinGecko asset image URLs; other Hyperliquid symbols use official marks from `https://app.hyperliquid.xyz/coins/{symbol}.svg`. Asset marks render from those image URLs, with a neutral first-letter mark only while an image is loading or unavailable. Neither the Binance ticker payload nor the Hyperliquid position payload includes an icon URL.
-- The UI consumes stable `Position` and `MarketQuote` models rather than exchange response types.
+edge sends the public address you enter to Hyperliquid's public API. It reads public market data from Binance and loads asset marks from public image URLs. It does not handle private keys, signing, trades, deposits, or withdrawals.
